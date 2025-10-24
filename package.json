@@ -1,0 +1,48 @@
+{
+  "name": "cornerstone-lms-admin-tools",
+  "version": "1.0.0",
+  "description": "A Chrome extension that enhances the Cornerstone LMS (CSOD) admin experience with powerful tools and utilities for administrators",
+  "main": "manifest.json",
+  "scripts": {
+    "build": "echo 'No build process needed for this extension'",
+    "test": "echo 'No tests specified'",
+    "lint": "echo 'No linting configured'",
+    "package": "zip -r cornerstone-lms-tools.zip . -x '*.git*' 'node_modules/*' '*.zip' '*.md' 'package*.json'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/cornerstone-lms-tools.git"
+  },
+  "keywords": [
+    "chrome-extension",
+    "cornerstone-lms",
+    "csod",
+    "admin-tools",
+    "lms",
+    "learning-management-system",
+    "browser-extension",
+    "productivity"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yourusername/cornerstone-lms-tools/issues"
+  },
+  "homepage": "https://github.com/yourusername/cornerstone-lms-tools#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {},
+  "dependencies": {},
+  "browserslist": [
+    "Chrome >= 88",
+    "Edge >= 88",
+    "Opera >= 74"
+  ],
+  "manifest": {
+    "version": "1.0.0",
+    "manifest_version": 3,
+    "name": "Cornerstone LMS Admin Tools",
+    "description": "Enhanced tools and utilities for Cornerstone LMS administrators"
+  }
+}

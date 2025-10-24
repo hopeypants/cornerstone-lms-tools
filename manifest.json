@@ -1,0 +1,68 @@
+{
+  "manifest_version": 3,
+  "name": "Cornerstone LMS Admin Tools",
+  "version": "1.0.0",
+  "description": "Enhanced tools and utilities for Cornerstone LMS administrators",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://*.csod.com/*"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.csod.com/*"],
+      "js": [
+        "content/enhancements/header-logout-link.js",
+        "content/enhancements/custom-header-links.js",
+        "content/enhancements/sessions-checkbox-defaults.js",
+        "content/enhancements/format-session-dates.js",
+        "content/enhancements/user-status-dropdown-defaults.js",
+        "content/enhancements/user-ou-type-dropdown-defaults.js",
+        "content/enhancements/user-country-dropdown-defaults.js",
+        "content/content.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://*.csod.com/*event_sessions_list_main*"],
+      "js": [
+        "content/enhancements/highlight-zero-enrollments.js",
+        "content/enhancements/center-enrollment-column.js",
+        "content/content.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://*.csod.com/*/ILT/NewUI/main*",
+        "https://*.csod.com/LMS/ILT/NewUI/main*"
+      ],
+      "js": [
+        "content/enhancements/toggle-tentative-column.js",
+        "content/enhancements/highlight-zero-sessions.js",
+        "content/enhancements/center-number-columns.js",
+        "content/content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
+
