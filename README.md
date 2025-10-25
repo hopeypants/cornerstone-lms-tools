@@ -90,25 +90,6 @@ cornerstone-lms-tools/
 └── README.md                   # This file
 ```
 
-### Making Changes
-
-1. **Edit the code** in your preferred editor
-2. **Reload the extension**:
-   - Go to `chrome://extensions/`
-   - Click the refresh icon on your extension
-3. **Test your changes** on CSOD pages
-4. **Debug** using Chrome DevTools:
-   - Right-click extension icon → "Inspect popup"
-   - Use browser console for content script debugging
-
-### Adding New Features
-
-1. **Create enhancement file** in `content/enhancements/`
-2. **Add to manifest.json** content scripts
-3. **Register in content.js** ENHANCEMENTS object
-4. **Add toggle** in `popup/popup.html`
-5. **Add logic** in `popup/popup.js`
-
 ## 🔧 Configuration
 
 The extension provides a popup interface where you can:
@@ -125,7 +106,6 @@ The extension provides a popup interface where you can:
 3. **Click the extension icon** in your browser toolbar
 4. **Configure your preferences** using the popup interface
 5. **Features will automatically apply** based on your settings
-
 
 ## 📄 License
 
