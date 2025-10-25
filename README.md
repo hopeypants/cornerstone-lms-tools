@@ -36,6 +36,14 @@ This extension works on all Chromium-based browsers:
 ### From Source (Developer Mode)
 
 1. **Download the extension**:
+   
+   **Option A: Download ZIP (Recommended)**
+   - Go to [GitHub Repository](https://github.com/hopeypants/cornerstone-lms-tools)
+   - Click the green "Code" button
+   - Select "Download ZIP"
+   - Extract the ZIP file to a folder on your computer
+   
+   **Option B: Using Git**
    ```bash
    git clone https://github.com/hopeypants/cornerstone-lms-tools.git
    cd cornerstone-lms-tools

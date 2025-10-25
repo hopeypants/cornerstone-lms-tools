@@ -14,12 +14,21 @@ This guide will help you install the Cornerstone LMS Admin Tools extension on yo
 
 ## Installation Methods
 
-### Method 1: From Source (Recommended for Testing)
+### Method 1: Download ZIP (Recommended)
 
 1. **Download the Extension**
-   - Click the green "Code" button on the GitHub repository
+   
+   **Option A: Direct Download**
+   - Go to [GitHub Repository](https://github.com/hopeypants/cornerstone-lms-tools)
+   - Click the green "Code" button
    - Select "Download ZIP"
    - Extract the ZIP file to a folder on your computer
+   
+   **Option B: Using Git (for developers)**
+   ```bash
+   git clone https://github.com/hopeypants/cornerstone-lms-tools.git
+   cd cornerstone-lms-tools
+   ```
 
 2. **Install in Chrome**
    - Open Chrome and go to `chrome://extensions/`
