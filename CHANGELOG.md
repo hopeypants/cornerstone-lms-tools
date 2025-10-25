@@ -58,13 +58,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## Future Releases
-
 ### Planned Features
-- Firefox compatibility (Manifest V2 conversion)
 - Additional CSOD page enhancements
-- Bulk operations for admin tasks
-- Export/import settings functionality
 - Enhanced customization options
 
 ### Known Issues
