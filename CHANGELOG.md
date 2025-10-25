@@ -52,7 +52,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 - Comprehensive README with installation instructions
-- Contributing guidelines
 - MIT License
 - Package.json metadata
 - Git ignore configuration

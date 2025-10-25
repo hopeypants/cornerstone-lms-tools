@@ -15,7 +15,7 @@ We take security bugs seriously. We appreciate your efforts to responsibly discl
 
 ### How to Report
 
-Please report security vulnerabilities by emailing [your-email@example.com](mailto:your-email@example.com) with the following information:
+Please report security vulnerabilities by emailing [davehope5@hotmail.co.uk](mailto:davehope5@hotmail.co.uk) with the following information:
 
 - **Description** of the vulnerability
 - **Steps to reproduce** the issue
@@ -82,12 +82,11 @@ Security updates will be released as soon as possible after a vulnerability is c
 - Release a patch version with the fix
 - Update the changelog with security information
 - Notify users through GitHub releases
-- Consider publishing to Chrome Web Store if appropriate
 
 ## Contact
 
 For security-related questions or concerns, please contact:
-- Email: [your-email@example.com](mailto:your-email@example.com)
-- GitHub Issues: [Create a private issue](https://github.com/yourusername/cornerstone-lms-tools/issues/new)
+- Email: [davehope5@hotmail.co.uk](mailto:davehope5@hotmail.co.uk)
+- GitHub Issues: [Create a private issue](https://github.com/hopeypants/cornerstone-lms-tools/issues/new)
 
 Thank you for helping keep Cornerstone LMS Admin Tools secure! 🔒

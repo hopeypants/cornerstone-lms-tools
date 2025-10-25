@@ -59,7 +59,6 @@ Get up and running with Cornerstone LMS Admin Tools in 5 minutes!
 - **Issues**: Check [GitHub Issues](https://github.com/hopeypants/cornerstone-lms-tools/issues)
 - **Documentation**: See [README.md](README.md) for full details
 - **Installation**: See [INSTALLATION.md](INSTALLATION.md) for detailed steps
-- **Contributing**: See [CONTRIBUTING.md](CONTRIBUTING.md) to help improve the extension
 
 ## 🎉 You're All Set!
 

@@ -251,6 +251,28 @@ footer {
   font-weight: 500;
 }
 
+.github-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 11px;
+  margin-left: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.github-link:hover {
+  color: #374151;
+  background-color: #f3f4f6;
+}
+
+.github-link i {
+  font-size: 12px;
+}
+
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 8px;

@@ -37,7 +37,7 @@ This extension works on all Chromium-based browsers:
 
 1. **Download the extension**:
    ```bash
-   git clone https://github.com/yourusername/cornerstone-lms-tools.git
+   git clone https://github.com/hopeypants/cornerstone-lms-tools.git
    cd cornerstone-lms-tools
    ```
 
@@ -51,9 +51,6 @@ This extension works on all Chromium-based browsers:
    - Go to browser's extension management page
    - Enable "Developer mode" or "Load unpacked extensions"
    - Select the `cornerstone-lms-tools` folder
-
-### From Chrome Web Store
-*Coming soon - extension will be published to the Chrome Web Store*
 
 ## 🛠️ Development
 
@@ -129,16 +126,6 @@ The extension provides a popup interface where you can:
 4. **Configure your preferences** using the popup interface
 5. **Features will automatically apply** based on your settings
 
-## 🤝 Contributing
-
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
-
-### How to Contribute
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
 
 ## 📄 License
 
@@ -147,15 +134,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🐛 Bug Reports & Feature Requests
 
 Please use GitHub Issues to report bugs or request features:
-- [Report a Bug](https://github.com/yourusername/cornerstone-lms-tools/issues/new?template=bug_report.md)
-- [Request a Feature](https://github.com/yourusername/cornerstone-lms-tools/issues/new?template=feature_request.md)
+- [Report a Bug](https://github.com/hopeypants/cornerstone-lms-tools/issues)
+- [Request a Feature](https://github.com/hopeypants/cornerstone-lms-tools/issues)
 
 ## 📞 Support
 
 If you need help or have questions:
-- Check the [Issues](https://github.com/yourusername/cornerstone-lms-tools/issues) page
+- Check the [Issues](https://github.com/hopeypants/cornerstone-lms-tools/issues) page
 - Create a new issue with your question
-- Contact the maintainers
 
 ## 🔄 Changelog
 
