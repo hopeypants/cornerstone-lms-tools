@@ -23,7 +23,7 @@
     "browser-extension",
     "productivity"
   ],
-  "author": "Dave Hope <dave@hopeypants.com>",
+  "author": "Dave Hope",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/hopeypants/cornerstone-lms-tools/issues"
