@@ -10,7 +10,7 @@ body {
   font-size: 14px;
   color: #333;
   background: #f5f5f5;
-  width: 380px;
+  width: 450px;
   max-height: 600px;
   overflow-y: auto;
 }
@@ -243,8 +243,24 @@ footer {
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 16px;
   font-size: 11px;
   color: #9ca3af;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+}
+
+.footer-center {
+  display: flex;
+  align-items: center;
+}
+
+.footer-right {
+  display: flex;
+  align-items: center;
 }
 
 .version {
@@ -258,7 +274,6 @@ footer {
   color: #6b7280;
   text-decoration: none;
   font-size: 11px;
-  margin-left: 12px;
   padding: 4px 8px;
   border-radius: 4px;
   transition: color 0.2s, background-color 0.2s;
@@ -271,6 +286,29 @@ footer {
 
 .github-link i {
   font-size: 12px;
+}
+
+.buy-me-coffee-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.buy-me-coffee-link:hover {
+  color: #374151;
+  background-color: #f3f4f6;
+}
+
+.buy-me-coffee-link img {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
 }
 
 /* Scrollbar Styling */
@@ -356,6 +394,27 @@ footer {
 
 .btn-danger:hover {
   background: #dc2626;
+}
+
+.btn-warning {
+  background: #f59e0b;
+  color: white;
+}
+
+.btn-warning:hover {
+  background: #d97706;
+}
+
+.btn-import {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  color: white;
+  border: none;
+}
+
+.btn-import:hover {
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
 }
 
 .custom-links-list {

@@ -17,8 +17,30 @@ class HighlightZeroEnrollmentsEnhancement {
   async initialize() {
     console.log(`${this.name}: Initializing...`);
 
+    // Check if we're on an ILT session page first (faster detection)
+    const isILTSessionPage = window.location.href.includes('main_sessions');
+    
     try {
-      const table = await this.waitForElement('#allEvent-list', 5000);
+      let table;
+      if (isILTSessionPage) {
+        // For ILT session pages, look for the specific table immediately
+        table = document.querySelector('#tblSessionData');
+        if (!table) {
+          table = await this.waitForElement('#tblSessionData', 1000);
+        }
+      } else {
+        // For regular session pages, look for the regular table
+        table = document.querySelector('#allEvent-list');
+        if (!table) {
+          table = await this.waitForElement('#allEvent-list', 2000);
+        }
+      }
+      
+      if (!table) {
+        console.warn(`${this.name}: Could not find session list table`);
+        return;
+      }
+
       this.applyEnrollmentHighlighting(table);
 
       // Set up MutationObserver to re-apply highlighting on table changes
@@ -66,25 +88,35 @@ class HighlightZeroEnrollmentsEnhancement {
    * @param {Element} table - The session list table element
    */
   applyEnrollmentHighlighting(table) {
-    // Find all enrollment cells (spans with RosterActualCount in ID)
-    const enrollmentSpans = table.querySelectorAll('span[id*="RosterActualCount"]');
+    // Optimize based on table type
+    const isILTSessionPage = window.location.href.includes('main_sessions');
     
-    enrollmentSpans.forEach(span => {
-      this.highlightEnrollmentCell(span);
-    });
+    if (isILTSessionPage) {
+      // For ILT session tables, directly target the 9th column (enrollment column)
+      const enrollmentCells = table.querySelectorAll('tbody tr td:nth-child(9)');
+      enrollmentCells.forEach(cell => {
+        this.highlightEnrollmentCell(cell);
+      });
+    } else {
+      // For regular session list tables (with spans)
+      const enrollmentSpans = table.querySelectorAll('span[id*="RosterActualCount"]');
+      enrollmentSpans.forEach(span => {
+        this.highlightEnrollmentCell(span);
+      });
+    }
   }
 
   /**
    * Highlight a single enrollment cell if it contains zero enrollments
    * @param {Element} span - The span element containing the enrollment data
    */
-  highlightEnrollmentCell(span) {
-    const cellContent = span.textContent.trim();
+  highlightEnrollmentCell(element) {
+    const cellContent = element.textContent.trim();
     
     // Check if enrollment starts with "0 of" (zero enrollments)
     if (cellContent.startsWith('0 of')) {
       // Find the parent <td> cell to highlight the entire cell
-      const cell = span.closest('td');
+      const cell = element.closest('td') || element;
       if (cell) {
         cell.style.backgroundColor = '#ffcccc';
         this.highlightedCells.add(cell);

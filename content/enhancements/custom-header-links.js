@@ -9,6 +9,8 @@ class CustomHeaderLinksEnhancement {
     this.elements = [];
     this.customLinks = [];
     this.linksContainer = null;
+    this.iconSize = 20; // Default icon size in pixels
+    this.isRendering = false; // Flag to prevent duplicate rendering
   }
 
   /**
@@ -18,6 +20,9 @@ class CustomHeaderLinksEnhancement {
     console.log(`${this.name}: Initializing...`);
 
     try {
+      // Load icon size from storage
+      await this.loadIconSize();
+      
       // Load custom links from storage
       await this.loadCustomLinks();
       
@@ -27,10 +32,249 @@ class CustomHeaderLinksEnhancement {
       // Render all custom links directly to header
       this.renderCustomLinks();
       
+      // Apply icon size to all icons (including default CSOD icons)
+      this.applyIconSizeToAll();
+      
       console.log(`${this.name}: Custom links initialized with ${this.customLinks.length} links`);
     } catch (error) {
       console.warn(`${this.name}: Could not find header element`, error);
     }
+    
+    // Listen for icon size changes
+    this.setupMessageListeners();
+    
+    // Listen for storage changes
+    this.setupStorageListeners();
+    
+    // Watch for search active state changes
+    this.setupSearchActiveWatcher();
+  }
+  
+  /**
+   * Load icon size from storage
+   */
+  async loadIconSize() {
+    try {
+      const result = await chrome.storage.sync.get(['customLinkIconSize']);
+      this.iconSize = result.customLinkIconSize || 20;
+      console.log(`${this.name}: Icon size loaded: ${this.iconSize}px`);
+    } catch (error) {
+      console.error(`${this.name}: Error loading icon size:`, error);
+      this.iconSize = 20;
+    }
+  }
+  
+  /**
+   * Apply icon size to an icon element
+   */
+  applyIconSize(iconElement) {
+    if (iconElement && this.iconSize) {
+      iconElement.style.fontSize = `${this.iconSize}px`;
+      iconElement.style.setProperty('font-size', `${this.iconSize}px`, 'important');
+      console.log(`${this.name}: Applied icon size ${this.iconSize}px to icon element`);
+    }
+  }
+  
+  /**
+   * Apply icon size to all existing icons (including logout link and default CSOD icons)
+   */
+  applyIconSizeToAll() {
+    console.log(`${this.name}: Applying icon size ${this.iconSize}px to ${this.elements.length} elements`);
+    
+    // Apply to custom links
+    this.elements.forEach((element, index) => {
+      const icon = element.querySelector('i');
+      if (icon) {
+        this.applyIconSize(icon);
+      } else {
+        console.warn(`${this.name}: No icon found in element ${index}`);
+      }
+    });
+    
+    // Apply to logout link if it exists
+    const logoutElement = document.querySelector('.csod-custom-logout');
+    if (logoutElement) {
+      const logoutIcon = logoutElement.querySelector('i');
+      if (logoutIcon) {
+        this.applyIconSize(logoutIcon);
+        console.log(`${this.name}: Applied icon size to logout link icon`);
+      }
+    }
+    
+    // Apply to default CSOD nav-act icons (navigation menu icons)
+    const navActElements = document.querySelectorAll('.c-hdr-item.nav-act i');
+    navActElements.forEach((icon, index) => {
+      if (icon) {
+        this.applyIconSize(icon);
+        console.log(`${this.name}: Applied icon size to nav-act icon ${index}`);
+      }
+    });
+    
+    // Apply to default CSOD search icons (only if search is not active)
+    const searchActive = document.querySelector('.c-global-search.active');
+    const searchElements = document.querySelectorAll('.c-hdr-item.search i');
+    searchElements.forEach((icon, index) => {
+      if (icon) {
+        if (searchActive) {
+          // If search is active, set to 20px
+          icon.style.fontSize = '20px';
+          icon.style.setProperty('font-size', '20px', 'important');
+          console.log(`${this.name}: Applied 20px to active search icon ${index}`);
+        } else {
+          // If search is not active, apply custom icon size
+          this.applyIconSize(icon);
+          console.log(`${this.name}: Applied icon size to search icon ${index}`);
+        }
+      }
+    });
+  }
+  
+  /**
+   * Apply specific size to search icons
+   * @param {number} size - Size in pixels (or null to use custom icon size)
+   */
+  applySearchIconSize(size = null) {
+    const searchElements = document.querySelectorAll('.c-hdr-item.search i');
+    const finalSize = size !== null ? size : this.iconSize;
+    
+    searchElements.forEach((icon, index) => {
+      if (icon) {
+        icon.style.fontSize = `${finalSize}px`;
+        icon.style.setProperty('font-size', `${finalSize}px`, 'important');
+        console.log(`${this.name}: Applied ${finalSize}px to search icon ${index}`);
+      }
+    });
+  }
+  
+  /**
+   * Setup watcher for search active state changes
+   */
+  setupSearchActiveWatcher() {
+    // Track if we're already observing the search element
+    let isObservingSearch = false;
+    
+    // Check initial state
+    this.updateSearchIconSizeForActiveState();
+    
+    // Function to observe .c-global-search element
+    const observeSearchElement = () => {
+      const globalSearch = document.querySelector('.c-global-search');
+      if (globalSearch && !isObservingSearch) {
+        observer.observe(globalSearch, {
+          attributes: true,
+          attributeFilter: ['class']
+        });
+        isObservingSearch = true;
+      }
+    };
+    
+    // Watch for changes to .c-global-search.active
+    const observer = new MutationObserver(() => {
+      this.updateSearchIconSizeForActiveState();
+    });
+    
+    // Try to observe immediately
+    observeSearchElement();
+    
+    // Also observe document body for dynamically added elements
+    const bodyObserver = new MutationObserver((mutations) => {
+      let shouldCheck = false;
+      
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'childList') {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === 1) { // Element node
+              if (node.matches && node.matches('.c-global-search')) {
+                shouldCheck = true;
+              } else if (node.querySelector && node.querySelector('.c-global-search')) {
+                shouldCheck = true;
+              }
+            }
+          });
+        } else if (mutation.type === 'attributes' && mutation.target.classList) {
+          if (mutation.target.classList.contains('c-global-search')) {
+            this.updateSearchIconSizeForActiveState();
+          }
+        }
+      });
+      
+      if (shouldCheck) {
+        observeSearchElement();
+        this.updateSearchIconSizeForActiveState();
+      }
+    });
+    
+    bodyObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    // Store observers for cleanup if needed
+    this.searchActiveObserver = observer;
+    this.searchActiveBodyObserver = bodyObserver;
+    
+    // Also listen for click events on search elements as a fallback
+    const clickHandler = () => {
+      setTimeout(() => {
+        this.updateSearchIconSizeForActiveState();
+      }, 100);
+    };
+    
+    document.addEventListener('click', clickHandler, true);
+    this.searchClickHandler = clickHandler;
+  }
+  
+  /**
+   * Update search icon size based on active state
+   */
+  updateSearchIconSizeForActiveState() {
+    const searchActive = document.querySelector('.c-global-search.active');
+    if (searchActive) {
+      // Search is active - set to 20px
+      this.applySearchIconSize(20);
+    } else {
+      // Search is not active - use custom icon size
+      this.applySearchIconSize();
+    }
+  }
+  
+  /**
+   * Setup message listeners
+   */
+  setupMessageListeners() {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message.type === 'APPLY_CUSTOM_LINK_ICON_SIZE') {
+        this.iconSize = message.size || 20;
+        this.applyIconSizeToAll();
+        // Also update search icon size if not active
+        this.updateSearchIconSizeForActiveState();
+      }
+      // Note: CUSTOM_LINKS_UPDATED is handled by content.js to avoid duplicate listeners
+    });
+  }
+  
+  /**
+   * Setup storage change listeners
+   */
+  setupStorageListeners() {
+    chrome.storage.onChanged.addListener((changes, areaName) => {
+      if (areaName === 'sync') {
+        // Handle icon size changes
+        if (changes.customLinkIconSize) {
+          const newSize = changes.customLinkIconSize.newValue || 20;
+          console.log(`${this.name}: Storage changed - icon size: ${newSize}px`);
+          this.iconSize = newSize;
+          this.applyIconSizeToAll();
+          // Also update search icon size if not active
+          this.updateSearchIconSizeForActiveState();
+        }
+        
+        // Note: customHeaderLinks changes are handled by content.js to avoid duplicate rendering
+        // The content.js storage listener will call renderCustomLinks() via the active enhancement
+      }
+    });
   }
 
   /**
@@ -88,47 +332,79 @@ class CustomHeaderLinksEnhancement {
    * @returns {Element|null} - The element to insert before, or null if not found
    */
   findInsertionPoint(header) {
-    // Find the csod-custom-logout element to insert before it
-    const logoutElement = header.querySelector('.csod-custom-logout');
+    // Find the first default .c-hdr-item element (insert before all default header items)
+    const headerItems = header.querySelectorAll('.c-hdr-item:not(.custom-separator):not([class*="custom-link-"])');
     
-    if (!logoutElement) {
-      console.warn(`${this.name}: Could not find csod-custom-logout element in header`);
-      return null;
+    if (headerItems.length > 0) {
+      const firstItem = headerItems[0];
+      console.log(`${this.name}: Found insertion point - first default header item`);
+      return firstItem;
     }
-
-    return logoutElement;
+    
+    // Fallback: Try to find csod-custom-logout element (if Header Logout Link is active)
+    const logoutElement = header.querySelector('.csod-custom-logout');
+    if (logoutElement) {
+      console.log(`${this.name}: Using logout element as insertion point`);
+      return logoutElement;
+    }
+    
+    // Last resort: Append to header
+    console.warn(`${this.name}: Could not find insertion point, will append to header`);
+    return null; // Will be handled in renderCustomLinks
   }
 
   /**
    * Render all custom links
    */
   renderCustomLinks() {
-    // Clear existing links first
-    this.elements.forEach(element => {
-      if (element && element.parentNode) {
-        element.parentNode.removeChild(element);
+    // Prevent duplicate rendering
+    if (this.isRendering) {
+      console.log(`${this.name}: Already rendering, skipping duplicate call`);
+      return;
+    }
+    
+    this.isRendering = true;
+    
+    try {
+      // Clear existing links first
+      this.elements.forEach(element => {
+        if (element && element.parentNode) {
+          element.parentNode.removeChild(element);
+        }
+      });
+      this.elements = [];
+
+      // Find insertion point
+      const header = document.querySelector('header.c-page-header');
+      if (!header) {
+        console.warn(`${this.name}: Could not find header element`);
+        return;
       }
-    });
-    this.elements = [];
 
-    // Find insertion point
-    const header = document.querySelector('header.c-page-header');
-    if (!header) {
-      console.warn(`${this.name}: Could not find header element`);
-      return;
+      const insertionPoint = this.findInsertionPoint(header);
+      
+      // Render each custom link directly to the header
+      this.customLinks.forEach((link, index) => {
+        const linkElement = this.createLinkElement(link, index);
+        
+        if (insertionPoint) {
+          // Insert before the insertion point
+          insertionPoint.parentNode.insertBefore(linkElement, insertionPoint);
+        } else {
+          // Append to header as fallback
+          header.appendChild(linkElement);
+        }
+        
+        this.elements.push(linkElement);
+      });
+      
+      console.log(`${this.name}: Rendered ${this.elements.length} custom links`);
+    } finally {
+      // Use setTimeout to ensure rendering flag is cleared even if an error occurs
+      setTimeout(() => {
+        this.isRendering = false;
+      }, 100);
     }
-
-    const insertionPoint = this.findInsertionPoint(header);
-    if (!insertionPoint) {
-      return;
-    }
-
-    // Render each custom link directly to the header
-    this.customLinks.forEach((link, index) => {
-      const linkElement = this.createLinkElement(link, index);
-      insertionPoint.parentNode.insertBefore(linkElement, insertionPoint);
-      this.elements.push(linkElement);
-    });
   }
 
   /**
@@ -183,6 +459,9 @@ class CustomHeaderLinksEnhancement {
     const iconElement = document.createElement('i');
     iconElement.className = this.getIconClass(link.icon, link);
     iconElement.setAttribute('aria-hidden', 'true');
+    
+    // Apply icon size if setting exists
+    this.applyIconSize(iconElement);
 
     linkElement.appendChild(iconElement);
     wrapperDiv.appendChild(linkElement);
@@ -255,15 +534,18 @@ class CustomHeaderLinksEnhancement {
     const icon = iconMap[iconName];
     if (!icon) {
       console.warn(`${this.name}: Unknown icon "${iconName}", using default`);
-      return window.FontAwesomeUtil ? window.FontAwesomeUtil.getIconClass('link') : '🔗';
+      // Default to fa3 icon class (CSOD standard)
+      return 'fa-icon-link';
     }
 
-    // Use FontAwesomeUtil if available, otherwise fallback to none
-    if (window.FontAwesomeUtil && window.FontAwesomeUtil.version) {
-      return icon[window.FontAwesomeUtil.version] || icon.none;
+    // Prefer fa3 (fa-icon-*) classes for CSOD compatibility
+    // Only use FontAwesomeUtil if it's available and explicitly set to fa6
+    if (window.FontAwesomeUtil && window.FontAwesomeUtil.version === 'fa6') {
+      return icon.fa6 || icon.fa3;
     }
     
-    return icon.none;
+    // Default to fa3 (fa-icon-*) classes for CSOD
+    return icon.fa3 || icon.none;
   }
 
   /**

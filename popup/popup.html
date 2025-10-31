@@ -17,10 +17,13 @@
     <!-- Tab Navigation -->
     <nav class="tab-nav">
       <button class="tab-button active" data-tab="global">Global</button>
+      <button class="tab-button" data-tab="catalog">Catalog</button>
       <button class="tab-button" data-tab="ilt">ILT</button>
       <button class="tab-button" data-tab="users">Users</button>
+      <button class="tab-button" data-tab="transcript">Transcript</button>
+      <button class="tab-button" data-tab="misc">Misc</button>
     </nav>
-
+    
     <main>
       <!-- Global Tab -->
       <div class="tab-content active" id="global-tab">
@@ -66,6 +69,16 @@
               <button id="remove-all-links" class="btn btn-danger">Remove All</button>
             </div>
             
+            <!-- Icon Size Control -->
+            <div class="form-group" style="margin-top: 16px;">
+              <label class="form-label" for="custom-link-icon-size">Icon Size</label>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <input type="range" id="custom-link-icon-size" min="16" max="48" value="20" step="1" style="flex: 1;">
+                <span id="custom-link-icon-size-value" style="min-width: 40px; text-align: center; font-weight: 500; color: #374151;">20px</span>
+                <button id="reset-custom-link-icon-size" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;">Reset</button>
+              </div>
+            </div>
+
             <!-- Header Padding Control -->
             <div class="form-group" style="margin-top: 16px;">
               <label class="form-label" for="header-padding">Header Icon Padding</label>
@@ -78,12 +91,93 @@
             
             <div class="custom-links-note">
               <small style="color: #6b7280; font-size: 11px;">
-                💡 Icons at the top of the list appear leftmost in the header, icons at the bottom appear rightmost.
+              Icons at the top of the list appear leftmost in the header, icons at the bottom appear rightmost.
               </small>
             </div>
             <div id="custom-links-list" class="custom-links-list">
               <!-- Custom links will be rendered here -->
             </div>
+          </div>
+        </section>
+
+        <!-- Header Icons Section -->
+        <section class="category" id="header-icons-section">
+          <h2 class="category-title">
+            <span class="category-icon">🎨</span>
+            Header Icons
+          </h2>
+          <div class="category-content">
+            <div class="toggle-item" id="resize-ai-icon-item" style="display: none;">
+              <div class="toggle-info">
+                <label for="resize-ai-icon">Resize Galaxy AI icon</label>
+                <p class="toggle-description">Control the size of the Cornerstone Galaxy AI icon in the header.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="resize-ai-icon" data-feature="resizeAIIcon">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <!-- AI Icon Size Control -->
+            <div class="form-group" id="ai-icon-size-config" style="margin-top: 8px; display: none;">
+              <label class="form-label" for="ai-icon-size">AI Icon Size</label>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <input type="range" id="ai-icon-size" min="16" max="48" value="32" step="2" style="flex: 1;">
+                <span id="ai-icon-size-value" style="min-width: 40px; text-align: center; font-weight: 500; color: #374151;">32px</span>
+                <button id="reset-ai-icon-size" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;">Reset</button>
+              </div>
+            </div>
+
+            <div class="toggle-item" id="resize-pinned-links-icon-item" style="display: none;">
+              <div class="toggle-info">
+                <label for="resize-pinned-links-icon">Resize Pinned Links icon</label>
+                <p class="toggle-description">Control the size of the Pinned Links icon in the header.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="resize-pinned-links-icon" data-feature="resizePinnedLinksIcon">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <!-- Pinned Links Icon Size Control -->
+            <div class="form-group" id="pinned-links-icon-size-config" style="margin-top: 8px; display: none;">
+              <label class="form-label" for="pinned-links-icon-size">Pinned Links Icon Size</label>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <input type="range" id="pinned-links-icon-size" min="16" max="48" value="22" step="2" style="flex: 1;">
+                <span id="pinned-links-icon-size-value" style="min-width: 40px; text-align: center; font-weight: 500; color: #374151;">22px</span>
+                <button id="reset-pinned-links-icon-size" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;">Reset</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Settings Management Section -->
+        <section class="category">
+          <h2 class="category-title">
+            <span class="category-icon">⚙️</span>
+            Settings
+          </h2>
+          <div class="category-content">
+            <div class="settings-actions" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+              <button id="export-settings" class="btn btn-primary" style="flex: 1; min-width: 120px;">
+                Export Settings
+              </button>
+              <button id="import-settings" class="btn btn-import" style="flex: 1; min-width: 120px;">
+                Import Settings
+              </button>
+              <input type="file" id="import-settings-file" accept=".json" style="display: none;">
+            </div>
+            <div class="settings-actions" style="display: flex; gap: 12px; align-items: center; margin-top: 12px; flex-wrap: wrap;">
+              <button id="turn-off-all-features" class="btn btn-danger" style="flex: 1; min-width: 120px;">
+                Turn Off All Features
+              </button>
+              <button id="reset-all-features" class="btn btn-warning" style="flex: 1; min-width: 120px;">
+                Reset All Features
+              </button>
+            </div>
+            <p style="margin-top: 12px; font-size: 11px; color: #6b7280; text-align: center;">
+              Export your settings to a JSON file for backup or sharing. Import to restore from a previously exported file.
+            </p>
           </div>
         </section>
       </div>
@@ -159,6 +253,16 @@
             </div>
             <div class="toggle-item">
               <div class="toggle-info">
+                <label for="highlight-full-sessions">Highlight Full Sessions</label>
+                <p class="toggle-description">Highlights cells where enrollment numbers are equal, such as "10 of 10" or "5 of 5".</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="highlight-full-sessions" data-feature="highlightFullSessions">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-item">
+              <div class="toggle-info">
                 <label for="center-enrollment-column">Center Enrollment Column</label>
                 <p class="toggle-description">Centers the enrollment column on Session List pages.</p>
               </div>
@@ -209,52 +313,9 @@
                   </div>
                 </div>
                 <small style="color: #6b7280; font-size: 11px; margin-top: 8px; display: block;">
-                  💡 These settings control which status checkboxes are checked by default when you first visit a Sessions page.
+                  These settings control which status checkboxes are checked by default when you first visit a Sessions page.
                 </small>
               </div>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <!-- Instructor-Led Training Tab -->
-      <div class="tab-content" id="ilt-tab">
-        <!-- Events Section -->
-        <section class="category">
-          <h2 class="category-title">
-            <span class="category-icon">📅</span>
-            Events
-          </h2>
-          <div class="category-content">
-            <div class="toggle-item">
-              <div class="toggle-info">
-                <label for="toggle-tentative-column">Toggle Tentative Column</label>
-                <p class="toggle-description">Show/hide the tentative column in ILT event lists.</p>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="toggle-tentative-column" data-feature="toggleTentativeColumn">
-                <span class="slider"></span>
-              </label>
-            </div>
-            <div class="toggle-item">
-              <div class="toggle-info">
-                <label for="highlight-zero-sessions">Highlight Zero Sessions</label>
-                <p class="toggle-description">Highlights events with zero sessions in ILT event lists.</p>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="highlight-zero-sessions" data-feature="highlightZeroSessions">
-                <span class="slider"></span>
-              </label>
-            </div>
-            <div class="toggle-item">
-              <div class="toggle-info">
-                <label for="center-number-columns">Center Number Columns</label>
-                <p class="toggle-description">Centers numeric columns in ILT event lists.</p>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="center-number-columns" data-feature="centerNumberColumns">
-                <span class="slider"></span>
-              </label>
             </div>
           </div>
         </section>
@@ -271,7 +332,7 @@
           <div class="category-content">
             <div class="toggle-item">
               <div class="toggle-info">
-                <label for="user-status-dropdown-defaults">User Status Dropdown Defaults</label>
+                <label for="user-status-dropdown-defaults">User Status Dropdown Default</label>
                 <p class="toggle-description">Control which option is selected by default in the User Status dropdown.</p>
               </div>
               <label class="toggle-switch">
@@ -292,14 +353,14 @@
                   <option value="7">All</option>
                 </select>
                 <small style="color: #6b7280; font-size: 11px; margin-top: 8px; display: block;">
-                  💡 This setting controls which option is selected by default when you first visit a Users page.
+                  This setting controls which option is selected by default when you first visit a Users page.
                 </small>
               </div>
             </div>
 
             <div class="toggle-item">
               <div class="toggle-info">
-                <label for="user-ou-type-dropdown-defaults">OU Type Dropdown Defaults</label>
+                <label for="user-ou-type-dropdown-defaults">OU Type Dropdown Default</label>
                 <p class="toggle-description">Control which option is selected by default in the OU Type dropdown.</p>
               </div>
               <label class="toggle-switch">
@@ -310,6 +371,9 @@
 
             <!-- OU Type Dropdown Defaults Management -->
             <div id="user-ou-type-dropdown-management" style="display: none;">
+              <div id="user-ou-type-page-warning" style="display: none; margin-top: 16px; padding: 12px; background-color: #fef3c7; border: 1px solid #fde68a; border-radius: 6px; color: #92400e; font-size: 13px;">
+                To set this default, you need to be on the <a href="/admin/Users.aspx" style="color: #92400e; text-decoration: underline; font-weight: 500;">Users</a> page.
+              </div>
               <div class="form-group" style="margin-top: 16px;">
                 <label class="form-label">Default Selected Option</label>
                 <select id="user-ou-type-default-select" class="form-select">
@@ -323,14 +387,14 @@
                   <option value="524288">Self Registration Group</option>
                 </select>
                 <small style="color: #6b7280; font-size: 11px; margin-top: 8px; display: block;">
-                  💡 This setting controls which option is selected by default when you first visit a Users page.
+                  This setting controls which option is selected by default when you first visit a Users page.
                 </small>
               </div>
             </div>
 
             <div class="toggle-item">
               <div class="toggle-info">
-                <label for="user-country-dropdown-defaults">Country Dropdown Defaults</label>
+                <label for="user-country-dropdown-defaults">Country Dropdown Default</label>
                 <p class="toggle-description">Control which option is selected by default in the Country dropdown.</p>
               </div>
               <label class="toggle-switch">
@@ -598,22 +662,397 @@
                   <option value="ZWE">Zimbabwe</option>
                 </select>
                 <small style="color: #6b7280; font-size: 11px; margin-top: 8px; display: block;">
-                  💡 This setting controls which option is selected by default when you first visit a Users page.
+                  This setting controls which option is selected by default when you first visit a Users page.
                 </small>
               </div>
             </div>
           </div>
         </section>
       </div>
+      
+      <!-- Catalog Tab -->
+      <div class="tab-content" id="catalog-tab">
+        <!-- Learning Object Links Section -->
+        <section class="category">
+          <h2 class="category-title">
+            <span class="category-icon">🔗</span>
+            Learning Object Links
+          </h2>
+          <div class="category-content">
+            <div class="toggle-item">
+              <div class="toggle-info">
+                <label for="lo-show-preview-link">Show Preview Link</label>
+                <p class="toggle-description">Displays a Preview link on Learning Object detail pages.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="lo-show-preview-link" data-feature="loShowPreviewLink">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-item">
+              <div class="toggle-info">
+                <label for="lo-show-details-link">Show Details Link</label>
+                <p class="toggle-description">Displays a Details link on Learning Object detail pages.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="lo-show-details-link" data-feature="loShowDetailsLink">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-item">
+              <div class="toggle-info">
+                <label for="lo-show-launch-link">Show Launch Link</label>
+                <p class="toggle-description">Displays a Launch link on Learning Object detail pages.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="lo-show-launch-link" data-feature="loShowLaunchLink">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-item">
+              <div class="toggle-info">
+                <label for="lo-show-register-link">Show Register Link</label>
+                <p class="toggle-description">Displays a Register link on Learning Object detail pages.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="lo-show-register-link" data-feature="loShowRegisterLink">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-item">
+              <div class="toggle-info">
+                <label for="lo-copy-loid">Copy LOID on Click</label>
+                <p class="toggle-description">Allows clicking the LOID element to copy it to clipboard.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="lo-copy-loid" data-feature="loCopyLoid">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Transcript Tab -->
+      <div class="tab-content" id="transcript-tab">
+        <section class="category">
+          <h2 class="category-title">
+            <span class="category-icon">📋</span>
+            Highlight Transcript Statuses
+          </h2>
+          <div class="category-content">
+            <div class="toggle-item">
+              <div class="toggle-info">
+                <label for="highlight-transcript-statuses">Highlight Transcript Statuses</label>
+                <p class="toggle-description">Highlight transcript items based on their status with customizable colors and opacity.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="highlight-transcript-statuses" data-feature="highlightTranscriptStatuses">
+                <span class="slider"></span>
+              </label>
+            </div>
+            
+            <div id="transcript-status-settings" style="margin-top: 16px; display: none;">
+              <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <label style="font-weight: 600; display: block;">Registered</label>
+                  <label class="toggle-switch" style="margin: 0;">
+                    <input type="checkbox" id="transcript-registered-enabled" data-status="registered">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input type="color" id="transcript-registered-color" data-status="registered" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                  <input type="range" id="transcript-registered-opacity" data-status="registered" min="0" max="100" value="10" style="flex: 1;">
+                  <span id="transcript-registered-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
+                </div>
+              </div>
+              
+              <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <label style="font-weight: 600; display: block;">In Progress</label>
+                  <label class="toggle-switch" style="margin: 0;">
+                    <input type="checkbox" id="transcript-in-progress-enabled" data-status="in-progress">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input type="color" id="transcript-in-progress-color" data-status="in-progress" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                  <input type="range" id="transcript-in-progress-opacity" data-status="in-progress" min="0" max="100" value="10" style="flex: 1;">
+                  <span id="transcript-in-progress-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
+                </div>
+              </div>
+              
+              <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <label style="font-weight: 600; display: block;">Past Due</label>
+                  <label class="toggle-switch" style="margin: 0;">
+                    <input type="checkbox" id="transcript-past-due-enabled" data-status="past-due">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input type="color" id="transcript-past-due-color" data-status="past-due" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                  <input type="range" id="transcript-past-due-opacity" data-status="past-due" min="0" max="100" value="10" style="flex: 1;">
+                  <span id="transcript-past-due-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
+                </div>
+              </div>
+              
+              <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <label style="font-weight: 600; display: block;">Pending</label>
+                  <label class="toggle-switch" style="margin: 0;">
+                    <input type="checkbox" id="transcript-pending-enabled" data-status="pending">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input type="color" id="transcript-pending-color" data-status="pending" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                  <input type="range" id="transcript-pending-opacity" data-status="pending" min="0" max="100" value="10" style="flex: 1;">
+                  <span id="transcript-pending-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
+                </div>
+              </div>
+              
+              <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <label style="font-weight: 600; display: block;">Inactive</label>
+                  <label class="toggle-switch" style="margin: 0;">
+                    <input type="checkbox" id="transcript-inactive-enabled" data-status="inactive">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input type="color" id="transcript-inactive-color" data-status="inactive" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                  <input type="range" id="transcript-inactive-opacity" data-status="inactive" min="0" max="100" value="10" style="flex: 1;">
+                  <span id="transcript-inactive-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
+                </div>
+              </div>
+
+              <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <label style="font-weight: 600; display: block;">Withdrawn</label>
+                  <label class="toggle-switch" style="margin: 0;">
+                    <input type="checkbox" id="transcript-withdrawn-enabled" data-status="withdrawn">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input type="color" id="transcript-withdrawn-color" data-status="withdrawn" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                  <input type="range" id="transcript-withdrawn-opacity" data-status="withdrawn" min="0" max="100" value="10" style="flex: 1;">
+                  <span id="transcript-withdrawn-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
+                </div>
+              </div>
+
+              <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <label style="font-weight: 600; display: block;">Cancelled</label>
+                  <label class="toggle-switch" style="margin: 0;">
+                    <input type="checkbox" id="transcript-cancelled-enabled" data-status="cancelled">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input type="color" id="transcript-cancelled-color" data-status="cancelled" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                  <input type="range" id="transcript-cancelled-opacity" data-status="cancelled" min="0" max="100" value="10" style="flex: 1;">
+                  <span id="transcript-cancelled-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Misc Tab -->
+      <div class="tab-content" id="misc-tab">
+
+        <section class="category">
+          <h2 class="category-title">
+            <span class="category-icon">📚</span>
+            Learning Assignment Tool
+          </h2>
+          <div class="category-content">
+            <div class="toggle-item">
+              <div class="toggle-info">
+                <label for="highlight-assignment-statuses">Highlight Assignment Statuses</label>
+                <p class="toggle-description">Color-code assignment list items based on their status.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="highlight-assignment-statuses" data-feature="highlightAssignmentStatuses">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <!-- Assignment Status Settings -->
+            <div id="assignment-status-settings" style="display: none; margin-top: 16px;">
+              <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <label style="font-weight: 600; display: block;">Processed</label>
+                  <label class="toggle-switch" style="margin: 0;">
+                    <input type="checkbox" id="assignment-processed-enabled" data-status="processed">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input type="color" id="assignment-processed-color" data-status="processed" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                  <input type="range" id="assignment-processed-opacity" data-status="processed" min="0" max="100" value="10" style="flex: 1;">
+                  <span id="assignment-processed-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
+                </div>
+              </div>
+
+              <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <label style="font-weight: 600; display: block;">Queued</label>
+                  <label class="toggle-switch" style="margin: 0;">
+                    <input type="checkbox" id="assignment-queued-enabled" data-status="queued">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input type="color" id="assignment-queued-color" data-status="queued" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                  <input type="range" id="assignment-queued-opacity" data-status="queued" min="0" max="100" value="10" style="flex: 1;">
+                  <span id="assignment-queued-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
+                </div>
+              </div>
+
+              <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <label style="font-weight: 600; display: block;">Cancelled</label>
+                  <label class="toggle-switch" style="margin: 0;">
+                    <input type="checkbox" id="assignment-cancelled-enabled" data-status="cancelled">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input type="color" id="assignment-cancelled-color" data-status="cancelled" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                  <input type="range" id="assignment-cancelled-opacity" data-status="cancelled" min="0" max="100" value="10" style="flex: 1;">
+                  <span id="assignment-cancelled-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
+                </div>
+              </div>
+
+              <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <label style="font-weight: 600; display: block;">Active</label>
+                  <label class="toggle-switch" style="margin: 0;">
+                    <input type="checkbox" id="assignment-active-enabled" data-status="active">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input type="color" id="assignment-active-color" data-status="active" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                  <input type="range" id="assignment-active-opacity" data-status="active" min="0" max="100" value="10" style="flex: 1;">
+                  <span id="assignment-active-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
+                </div>
+              </div>
+
+              <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <label style="font-weight: 600; display: block;">Inactive</label>
+                  <label class="toggle-switch" style="margin: 0;">
+                    <input type="checkbox" id="assignment-inactive-enabled" data-status="inactive">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input type="color" id="assignment-inactive-color" data-status="inactive" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                  <input type="range" id="assignment-inactive-opacity" data-status="inactive" min="0" max="100" value="10" style="flex: 1;">
+                  <span id="assignment-inactive-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
+                </div>
+              </div>
+
+              <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <label style="font-weight: 600; display: block;">Drafts</label>
+                  <label class="toggle-switch" style="margin: 0;">
+                    <input type="checkbox" id="assignment-drafts-enabled" data-status="drafts">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input type="color" id="assignment-drafts-color" data-status="drafts" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                  <input type="range" id="assignment-drafts-opacity" data-status="drafts" min="0" max="100" value="10" style="flex: 1;">
+                  <span id="assignment-drafts-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="category">
+          <h2 class="category-title">
+            <span class="category-icon">📄</span>
+            Custom Pages
+          </h2>
+          <div class="category-content">
+            <div class="toggle-item">
+              <div class="toggle-info">
+                <label for="custom-page-preview-link">Custom Page Preview Link</label>
+                <p class="toggle-description">Adds a button for each URL in the Custom Pages table to open the link in a new tab.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="custom-page-preview-link" data-feature="customPagePreviewLink">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section class="category">
+          <h2 class="category-title">
+            <span class="category-icon">👤</span>
+            Proxy As Another User
+          </h2>
+          <div class="category-content">
+            <div class="toggle-item" id="proxy-default-text-item">
+              <div class="toggle-info">
+                <label for="proxy-default-text">Proxy As Another User Default Comment</label>
+                <p class="toggle-description">Automatically populate the proxy reason textbox with your default text.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="proxy-default-text" data-feature="proxyDefaultText">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="form-group" id="proxy-default-text-config" style="margin-top: 8px; display: none;">
+              <label class="form-label" for="proxy-default-text-value">Default reason text</label>
+              <textarea id="proxy-default-text-value" class="form-input" rows="3" placeholder="Enter the reason text to auto-fill..."></textarea>
+              <small style="color: #6b7280; font-size: 11px; margin-top: 6px; display: block;">This text will be inserted into the Comments textbox when proxying as another user.</small>
+            </div>
+
+            <div class="toggle-item" id="proxy-auto-click-item" style="opacity: 0.6;">
+              <div class="toggle-info">
+                <label for="proxy-auto-click-login">Auto-click Log In Button</label>
+                <p class="toggle-description">After inserting the text, automatically click the Log In button.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="proxy-auto-click-login" data-feature="proxyAutoClickLogin" disabled>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+      </div>
+      
     </main>
 
     <footer>
       <div class="status-message" id="status-message"></div>
       <div class="footer-info">
-        <span class="version">v1.0.0</span>
-        <a href="https://github.com/hopeypants/cornerstone-lms-tools" target="_blank" class="github-link">
-          <i class="icon-github"></i> GitHub
-        </a>
+        <div class="footer-left">
+          <a href="https://github.com/hopeypants/cornerstone-lms-tools" target="_blank" class="github-link">
+            <i class="icon-github"></i> GitHub
+          </a>
+        </div>
+        <div class="footer-center">
+          <span class="version">v1.0.0</span>
+        </div>
+        <div class="footer-right">
+          <a href="https://buymeacoffee.com/hopeypants" target="_blank" class="buy-me-coffee-link" title="Buy me a coffee" rel="noopener noreferrer">
+            <img src="https://studio.buymeacoffee.com/assets/img/bmc-meta-new/new/favicon.ico" alt="Buy me a coffee">
+            Buy me a coffee
+          </a>
+        </div>
       </div>
     </footer>
   </div>

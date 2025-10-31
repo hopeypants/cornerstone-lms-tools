@@ -7,20 +7,64 @@ A Chrome extension that enhances the Cornerstone LMS (CSOD) admin experience wit
 ### Global Tools
 - **Header Logout Link**: Adds a logout link with icon to the page header
 - **Custom Header Links**: Add, configure, and reorder custom links in the page header with icons
-- **Format Session Dates**: Displays session dates and times on one line separated by pipe (|) on Session List pages
-- **Highlight Zero Enrollments**: Highlights cells with zero enrollments on Session List pages
-- **Center Enrollment Column**: Centers the enrollment column on Session List pages
-- **Sessions Checkbox Defaults**: Control which status checkboxes are checked by default on Sessions pages
+  - Customizable icon sizes (16px - 48px)
+  - Support for Font Awesome 3.2.1 icons
+  - Custom icon input option
+  - Drag and drop reordering
+  - Separator support
+  - Open in new tab option
+- **Header Padding**: Adjustable header padding slider
+- **Resize Galaxy AI Icon**: Customize the size of the Galaxy AI icon (16px - 48px)
+- **Resize Pinned Links Icon**: Customize the size of the Pinned Links icon (16px - 48px)
+  - Features only appear when icons are detected on the page
+
+### Catalog Tools
+- **Learning Object Links**: Show/hide Preview, Details, Launch, and Register links on Learning Object pages
+- **Copy LOID**: Quick copy button for Learning Object IDs (requires backend setting)
 
 ### Instructor-Led Training (ILT) Tools
 - **Toggle Tentative Column**: Show/hide the tentative column in ILT event lists
 - **Highlight Zero Sessions**: Highlights events with zero sessions in ILT event lists
 - **Center Number Columns**: Centers numeric columns in ILT event lists
+- **Highlight Full Sessions**: Highlights cells where enrollment numbers are equal
 
-### User Management Tools
+### Sessions Tools
+- **Format Session Dates**: Displays session dates and times on one line separated by pipe (|) on Session List pages
+- **Highlight Zero Enrollments**: Highlights cells with zero enrollments on Session List pages
+- **Center Enrollment Column**: Centers the enrollment column on Session List pages
+- **Sessions Checkbox Defaults**: Control which status checkboxes are checked by default on Sessions pages
+  - Tentative, Approved, Completed, Cancelled checkbox controls
+
+### Users Tools
 - **User Status Dropdown Defaults**: Control which option is selected by default in the User Status dropdown
 - **OU Type Dropdown Defaults**: Control which option is selected by default in the OU Type dropdown
+  - Dynamically loads available options from the Users page
+  - Requires being on the Users page to set defaults
 - **Country Dropdown Defaults**: Control which option is selected by default in the Country dropdown
+
+### Transcript Tools
+- **Highlight Transcript Statuses**: Color-code transcript statuses for quick visual identification
+  - Statuses: Past Due, In Progress, Pending, Registered, Inactive, Withdrawn, Cancelled
+  - Customizable colors and opacity for each status
+  - Only runs on pages with "UniversalProfile/Transcript" in the URL
+
+### Learning Assignment Tool
+- **Highlight Assignment Statuses**: Color-code assignment statuses for quick visual identification
+  - Statuses: Processed, Queued, Cancelled, Active, Inactive, Drafts (partial match)
+  - Customizable colors and opacity for each status
+  - Only runs on pages with "EnrollTraining/EnrollTrainingManagement" in the URL
+
+### Misc Tools
+- **Proxy As Another User**: Set default comment text for proxy sessions
+  - Auto-click Log In button option (requires default text to be set)
+  - Only runs on pages with "Admin/ProxyAsUser" in the URL
+- **Custom Page Preview Link**: Adds "Open" buttons to URLs in the Custom Pages table
+  - Works with AJAX pagination
+- **Settings Management**:
+  - Export Settings: Download all settings as a JSON file with timestamp
+  - Import Settings: Restore settings from a previously exported file
+  - Turn Off All Features: Disable all features while preserving settings
+  - Reset All Features: Reset all settings to defaults
 
 ## 🎯 Browser Compatibility
 
@@ -77,12 +121,20 @@ cornerstone-lms-tools/
 │   └── enhancements/            # Individual enhancement modules
 │       ├── header-logout-link.js
 │       ├── custom-header-links.js
+│       ├── resize-ai-icon.js
+│       ├── resize-pinned-links-icon.js
+│       ├── proxy-as-user.js
+│       ├── custom-page-preview-link.js
 │       ├── sessions-checkbox-defaults.js
 │       ├── format-session-dates.js
+│       ├── highlight-transcript-statuses.js
+│       ├── highlight-assignment-statuses.js
+│       ├── lo-links.js
 │       ├── user-status-dropdown-defaults.js
 │       ├── user-ou-type-dropdown-defaults.js
 │       ├── user-country-dropdown-defaults.js
 │       ├── highlight-zero-enrollments.js
+│       ├── highlight-full-sessions.js
 │       ├── center-enrollment-column.js
 │       ├── toggle-tentative-column.js
 │       ├── highlight-zero-sessions.js
@@ -100,12 +152,15 @@ cornerstone-lms-tools/
 
 ## 🔧 Configuration
 
-The extension provides a popup interface where you can:
-- Toggle features on/off
-- Configure custom header links
-- Set default checkbox states
-- Configure dropdown defaults
-- Manage all settings with tab persistence
+The extension provides a tabbed popup interface where you can:
+- **Global Tab**: Configure header links, icon sizes, and global settings
+- **Catalog Tab**: Manage Learning Object link features
+- **ILT Tab**: Configure Instructor-Led Training enhancements
+- **Users Tab**: Set dropdown defaults for user management
+- **Transcript Tab**: Configure transcript status highlighting
+- **Misc Tab**: Proxy settings, custom pages, and assignment status highlighting
+- Export/Import settings for backup and sharing
+- Turn off or reset all features
 
 ## 📝 Usage
 
@@ -113,7 +168,7 @@ The extension provides a popup interface where you can:
 2. **Navigate to any CSOD page** (`https://*.csod.com/*`)
 3. **Click the extension icon** in your browser toolbar
 4. **Configure your preferences** using the popup interface
-5. **Features will automatically apply** based on your settings
+5. **Features will automatically apply** based on your settings and page context
 
 ## 📄 License
 
@@ -133,18 +188,14 @@ If you need help or have questions:
 
 ## 🔄 Changelog
 
-### Version 1.0.0
-- Initial release
-- All core features implemented
-- Tab persistence
-- Cross-browser compatibility
-- Comprehensive admin tools for CSOD
+See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes and updates.
 
 ## 🙏 Acknowledgments
 
 - Built for Cornerstone LMS administrators
 - Uses Font Awesome 3.2.1 icons (compatible with CSOD's version)
 - Designed for CSOD's specific UI patterns and workflows
+- [Buy Me a Coffee](https://buymeacoffee.com/hopeypants) - Support the project
 
 ---
 

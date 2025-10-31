@@ -16,8 +16,30 @@ class CenterEnrollmentColumnEnhancement {
   async initialize() {
     console.log(`${this.name}: Initializing...`);
 
+    // Check if we're on an ILT session page first (faster detection)
+    const isILTSessionPage = window.location.href.includes('main_sessions');
+    
     try {
-      const table = await this.waitForElement('#allEvent-list', 5000);
+      let table;
+      if (isILTSessionPage) {
+        // For ILT session pages, look for the specific table immediately
+        table = document.querySelector('#tblSessionData');
+        if (!table) {
+          table = await this.waitForElement('#tblSessionData', 1000);
+        }
+      } else {
+        // For regular session pages, look for the regular table
+        table = document.querySelector('#allEvent-list');
+        if (!table) {
+          table = await this.waitForElement('#allEvent-list', 2000);
+        }
+      }
+      
+      if (!table) {
+        console.warn(`${this.name}: Could not find session list table`);
+        return;
+      }
+
       this.addEnrollmentColumnStyles();
       console.log(`${this.name}: Enrollment column centering applied.`);
     } catch (error) {
@@ -46,9 +68,15 @@ class CenterEnrollmentColumnEnhancement {
     const style = document.createElement('style');
     style.id = 'csod-center-enrollment-column-styles';
     style.textContent = `
-      /* Center the enrollment column */
+      /* Center the enrollment column for regular session list tables */
       #allEvent-list tbody tr td:nth-child(8),
       #allEvent-list thead tr th:nth-child(8) {
+        text-align: center !important;
+      }
+      
+      /* Center the enrollment column for ILT session tables (column 9) */
+      #tblSessionData tbody tr td:nth-child(9),
+      #tblSessionData thead tr th:nth-child(9) {
         text-align: center !important;
       }
     `;

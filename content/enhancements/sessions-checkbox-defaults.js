@@ -23,7 +23,9 @@ class SessionsCheckboxDefaultsEnhancement {
     
     // Check if we're on a Sessions page by looking for the checkbox table
     const checkboxTable = document.getElementById('ctl00_ContentPlaceHolder1_StatusTypeList') || 
-                         document.querySelector('table.NewUI-checkboxlist');
+                         document.querySelector('table.NewUI-checkboxlist') ||
+                         document.querySelector('table[class*="checkboxlist"]') ||
+                         document.querySelector('table.checkboxlist');
     
     if (!checkboxTable) {
       console.log('Sessions Checkbox Defaults: Not on Sessions page (checkbox table not found), skipping initialization');
@@ -55,8 +57,10 @@ class SessionsCheckboxDefaultsEnhancement {
       retryCount++;
       
       // Check if checkboxes are now available
-      const checkboxTable = document.getElementById('ctl00_ContentPlaceHolder1_StatusTypeList') || 
-                           document.querySelector('table.NewUI-checkboxlist');
+        const checkboxTable = document.getElementById('ctl00_ContentPlaceHolder1_StatusTypeList') || 
+                             document.querySelector('table.NewUI-checkboxlist') ||
+                             document.querySelector('table[class*="checkboxlist"]') ||
+                             document.querySelector('table.checkboxlist');
       
       if (checkboxTable) {
         console.log(`Sessions Checkbox Defaults: Found checkboxes on retry ${retryCount}`);
@@ -112,9 +116,11 @@ class SessionsCheckboxDefaultsEnhancement {
       console.log('Sessions Checkbox Defaults: Checkbox table not found, trying alternative selectors...');
       
       // Try alternative selectors
-      const altTable = document.querySelector('table.NewUI-checkboxlist');
+      const altTable = document.querySelector('table.NewUI-checkboxlist') ||
+                       document.querySelector('table[class*="checkboxlist"]') ||
+                       document.querySelector('table.checkboxlist');
       if (altTable) {
-        console.log('Sessions Checkbox Defaults: Found table with NewUI-checkboxlist class');
+        console.log('Sessions Checkbox Defaults: Found table with checkboxlist class');
         this.applyToTable(altTable);
         return;
       }

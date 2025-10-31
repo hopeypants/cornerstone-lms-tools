@@ -5,7 +5,8 @@
   "description": "Enhanced tools and utilities for Cornerstone LMS administrators",
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "scripting"
   ],
   "host_permissions": [
     "https://*.csod.com/*"
@@ -27,11 +28,15 @@
       "js": [
         "content/enhancements/header-logout-link.js",
         "content/enhancements/custom-header-links.js",
+        "content/enhancements/resize-ai-icon.js",
+        "content/enhancements/resize-pinned-links-icon.js",
+        "content/enhancements/proxy-as-user.js",
+        "content/enhancements/custom-page-preview-link.js",
         "content/enhancements/sessions-checkbox-defaults.js",
         "content/enhancements/format-session-dates.js",
-        "content/enhancements/user-status-dropdown-defaults.js",
-        "content/enhancements/user-ou-type-dropdown-defaults.js",
-        "content/enhancements/user-country-dropdown-defaults.js",
+        "content/enhancements/lo-links.js",
+        "content/enhancements/highlight-transcript-statuses.js",
+        "content/enhancements/highlight-assignment-statuses.js",
         "content/content.js"
       ],
       "run_at": "document_idle"
@@ -40,6 +45,7 @@
       "matches": ["https://*.csod.com/*event_sessions_list_main*"],
       "js": [
         "content/enhancements/highlight-zero-enrollments.js",
+        "content/enhancements/highlight-full-sessions.js",
         "content/enhancements/center-enrollment-column.js",
         "content/content.js"
       ],
@@ -47,13 +53,28 @@
     },
     {
       "matches": [
-        "https://*.csod.com/*/ILT/NewUI/main*",
-        "https://*.csod.com/LMS/ILT/NewUI/main*"
+        "https://*.csod.com/*/ILT/*/main*",
+        "https://*.csod.com/LMS/ILT/*/main*",
+        "https://*.csod.com/*/ILT/main*",
+        "https://*.csod.com/LMS/ILT/main*"
       ],
       "js": [
         "content/enhancements/toggle-tentative-column.js",
         "content/enhancements/highlight-zero-sessions.js",
         "content/enhancements/center-number-columns.js",
+        "content/enhancements/highlight-zero-enrollments.js",
+        "content/enhancements/highlight-full-sessions.js",
+        "content/enhancements/center-enrollment-column.js",
+        "content/content.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://*.csod.com/*admin/Users*"],
+      "js": [
+        "content/enhancements/user-status-dropdown-defaults.js",
+        "content/enhancements/user-ou-type-dropdown-defaults.js",
+        "content/enhancements/user-country-dropdown-defaults.js",
         "content/content.js"
       ],
       "run_at": "document_idle"

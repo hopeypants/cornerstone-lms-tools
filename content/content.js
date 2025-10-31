@@ -116,9 +116,15 @@ window.FontAwesomeUtil = {
 const ENHANCEMENTS = {
   headerLogoutLink: window.HeaderLogoutLinkEnhancement,
   customHeaderLinks: window.CustomHeaderLinksEnhancement,
+  ...(window.ResizeAIIconEnhancement && { resizeAIIcon: window.ResizeAIIconEnhancement }),
+  ...(window.ResizePinnedLinksIconEnhancement && { resizePinnedLinksIcon: window.ResizePinnedLinksIconEnhancement }),
+  ...(window.ProxyAsUserEnhancement && { proxyDefaultText: window.ProxyAsUserEnhancement }),
+  ...(window.ProxyAsUserEnhancement && { proxyAutoClickLogin: window.ProxyAsUserEnhancement }),
+  ...(window.CustomPagePreviewLinkEnhancement && { customPagePreviewLink: window.CustomPagePreviewLinkEnhancement }),
   // Only include enhancements that are loaded on this page
   ...(window.ToggleTentativeColumnEnhancement && { toggleTentativeColumn: window.ToggleTentativeColumnEnhancement }),
   ...(window.HighlightZeroSessionsEnhancement && { highlightZeroSessions: window.HighlightZeroSessionsEnhancement }),
+  ...(window.HighlightFullSessionsEnhancement && { highlightFullSessions: window.HighlightFullSessionsEnhancement }),
   ...(window.CenterNumberColumnsEnhancement && { centerNumberColumns: window.CenterNumberColumnsEnhancement }),
   ...(window.FormatSessionDatesEnhancement && { formatSessionDates: window.FormatSessionDatesEnhancement }),
   ...(window.HighlightZeroEnrollmentsEnhancement && { highlightZeroEnrollments: window.HighlightZeroEnrollmentsEnhancement }),
@@ -144,6 +150,7 @@ function updateEnhancementsRegistry() {
     customHeaderLinks: window.CustomHeaderLinksEnhancement,
     ...(window.ToggleTentativeColumnEnhancement && { toggleTentativeColumn: window.ToggleTentativeColumnEnhancement }),
     ...(window.HighlightZeroSessionsEnhancement && { highlightZeroSessions: window.HighlightZeroSessionsEnhancement }),
+    ...(window.HighlightFullSessionsEnhancement && { highlightFullSessions: window.HighlightFullSessionsEnhancement }),
     ...(window.CenterNumberColumnsEnhancement && { centerNumberColumns: window.CenterNumberColumnsEnhancement }),
     ...(window.FormatSessionDatesEnhancement && { formatSessionDates: window.FormatSessionDatesEnhancement }),
     ...(window.HighlightZeroEnrollmentsEnhancement && { highlightZeroEnrollments: window.HighlightZeroEnrollmentsEnhancement }),
@@ -215,6 +222,20 @@ async function initializeEnhancements(settings) {
   for (const [featureName, EnhancementClass] of Object.entries(ENHANCEMENTS)) {
     if (settings[featureName] && EnhancementClass) {
       await enableEnhancement(featureName, EnhancementClass);
+    }
+  }
+  
+  // Special case: If customHeaderLinks isn't enabled but links exist, enable it
+  if (!settings.customHeaderLinks) {
+    const customLinksResult = await chrome.storage.sync.get(['customHeaderLinks']);
+    const customLinks = customLinksResult.customHeaderLinks;
+    if (Array.isArray(customLinks) && customLinks.length > 0 && !activeEnhancements.customHeaderLinks) {
+      const EnhancementClass = ENHANCEMENTS.customHeaderLinks;
+      if (EnhancementClass) {
+        console.log('Content Script: Auto-enabling customHeaderLinks because links exist');
+        await enableEnhancement('customHeaderLinks', EnhancementClass);
+        await chrome.storage.sync.set({ customHeaderLinksEnabled: true });
+      }
     }
   }
 }
@@ -304,6 +325,18 @@ async function handleMessage(message, sender, sendResponse) {
   if (message.type === 'SETTING_CHANGED') {
     const { feature, enabled } = message;
     
+    // Skip LO link features - they handle their own messages via lo-links.js
+    if (feature.startsWith('loShow') || feature === 'loCopyLoid') {
+      // lo-links.js will handle this message directly
+      return;
+    }
+    
+    // Skip transcript features - they handle their own messages via highlight-transcript-statuses.js
+    if (feature === 'highlightTranscriptStatuses' || feature === 'transcriptSettingsChanged' || feature.startsWith('transcript')) {
+      // highlight-transcript-statuses.js will handle this message directly
+      return;
+    }
+    
     // Update registry before checking for enhancement
     updateEnhancementsRegistry();
     
@@ -323,14 +356,110 @@ async function handleMessage(message, sender, sendResponse) {
     // Handle custom links updates
     const { customLinks } = message;
     
+    // If we have links but the enhancement isn't active, enable it first
+    if (customLinks && customLinks.length > 0 && !activeEnhancements.customHeaderLinks) {
+      const EnhancementClass = ENHANCEMENTS.customHeaderLinks;
+      if (EnhancementClass) {
+        console.log('Content Script: Auto-enabling customHeaderLinks enhancement');
+        await enableEnhancement('customHeaderLinks', EnhancementClass);
+        // Also update storage to reflect that the feature is enabled
+        await chrome.storage.sync.set({ customHeaderLinksEnabled: true });
+        
+        // Wait a moment for initialization to complete
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+    
     if (activeEnhancements.customHeaderLinks) {
+      console.log('Content Script: Updating custom links, count:', customLinks?.length || 0);
       activeEnhancements.customHeaderLinks.customLinks = customLinks;
       activeEnhancements.customHeaderLinks.renderCustomLinks();
+    } else {
+      console.warn('Content Script: customHeaderLinks enhancement not active, cannot render links');
+      // If we still don't have an active enhancement, try one more time
+      if (customLinks && customLinks.length > 0) {
+        console.log('Content Script: Retrying to enable customHeaderLinks');
+        const EnhancementClass = ENHANCEMENTS.customHeaderLinks;
+        if (EnhancementClass) {
+          const enhancement = new EnhancementClass();
+          await enhancement.initialize();
+          activeEnhancements.customHeaderLinks = enhancement;
+          enhancement.customLinks = customLinks;
+          enhancement.renderCustomLinks();
+        }
+      }
     }
   } else if (message.type === 'APPLY_HEADER_PADDING') {
     // Handle header padding changes
     const { padding } = message;
     applyHeaderPadding(padding);
+  } else if (message.type === 'APPLY_CUSTOM_LINK_ICON_SIZE') {
+    // Handle custom link icon size changes
+    const { size } = message;
+    console.log(`Content Script: Received APPLY_CUSTOM_LINK_ICON_SIZE message with size: ${size}`);
+    if (activeEnhancements.customHeaderLinks) {
+      console.log(`Content Script: Updating icon size to ${size}px`);
+      activeEnhancements.customHeaderLinks.iconSize = size;
+      activeEnhancements.customHeaderLinks.applyIconSizeToAll();
+    } else {
+      console.warn('Content Script: customHeaderLinks enhancement not active');
+    }
+  } else if (message.type === 'GET_AI_ICON_STATUS') {
+    // Check if AI icon exists on the page
+    const iconElement = document.querySelector('.csxGalaxyAIAnnouncement-icon');
+    const iconFound = iconElement !== null;
+    sendResponse({ iconFound: iconFound });
+    return true; // Indicates we will send a response synchronously
+  } else if (message.type === 'GET_PINNED_LINKS_ICON_STATUS') {
+    // Check if Pinned Links icon exists on the page
+    const iconElement = document.querySelector('.quickLinksTooltip-icon');
+    const iconFound = iconElement !== null;
+    sendResponse({ iconFound: iconFound });
+    return true; // Indicates we will send a response synchronously
+  } else if (message.type === 'GET_OU_TYPE_OPTIONS') {
+    // Get OU Type dropdown options from the page
+    const dropdown = document.getElementById('ouFilter_ouFilterSelector_ddlTypesList') ||
+                     document.querySelector('select[data-tag="ddlTypesList"]');
+    
+    if (!dropdown) {
+      sendResponse({ options: null });
+      return true;
+    }
+    
+    const options = [];
+    const optionElements = dropdown.querySelectorAll('option');
+    
+    optionElements.forEach(option => {
+      options.push({
+        value: option.value,
+        text: option.textContent.trim()
+      });
+    });
+    
+    sendResponse({ options: options.length > 0 ? options : null });
+    return true; // Indicates we will send a response synchronously
+  } else if (message.type === 'APPLY_AI_ICON_SIZE') {
+    // Handle AI icon size changes
+    const { size } = message;
+    if (activeEnhancements.resizeAIIcon) {
+      activeEnhancements.resizeAIIcon.applyIconSize(size);
+    }
+  } else if (message.type === 'APPLY_PINNED_LINKS_ICON_SIZE') {
+    // Handle Pinned Links icon size changes
+    const { size } = message;
+    if (activeEnhancements.resizePinnedLinksIcon) {
+      activeEnhancements.resizePinnedLinksIcon.applyIconSize(size);
+    }
+  } else if (message.type === 'RESET_AI_ICON') {
+    // Handle AI icon reset
+    if (activeEnhancements.resizeAIIcon) {
+      activeEnhancements.resizeAIIcon.resetIconSize();
+    }
+  } else if (message.type === 'RESET_PINNED_LINKS_ICON') {
+    // Handle Pinned Links icon reset
+    if (activeEnhancements.resizePinnedLinksIcon) {
+      activeEnhancements.resizePinnedLinksIcon.resetIconSize();
+    }
   } else if (message.feature === 'sessionsCheckboxDefaults' && message.enabled === 'update') {
     // Handle sessions checkbox defaults update
     if (activeEnhancements.sessionsCheckboxDefaults) {
@@ -392,6 +521,18 @@ function applyHeaderPadding(padding) {
 chrome.storage.onChanged.addListener(async (changes, areaName) => {
   if (areaName === 'sync') {
     for (const [feature, change] of Object.entries(changes)) {
+      // Skip LO link features - they handle their own storage changes via lo-links.js
+      if (feature.startsWith('loShow') || feature === 'loCopyLoid') {
+        // lo-links.js will handle this storage change directly
+        continue;
+      }
+      
+      // Skip transcript features - they handle their own storage changes via highlight-transcript-statuses.js
+      if (feature === 'highlightTranscriptStatuses' || feature.startsWith('transcript')) {
+        // highlight-transcript-statuses.js will handle this storage change directly
+        continue;
+      }
+      
       // Special handling for customHeaderLinksEnabled
       if (feature === 'customHeaderLinksEnabled') {
         const enabled = change.newValue;

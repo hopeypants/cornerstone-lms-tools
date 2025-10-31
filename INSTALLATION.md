@@ -124,10 +124,18 @@ To remove the extension:
 
 When you want to update the extension:
 
-1. Download the latest version from GitHub
-2. Go to the extensions page
-3. Click the refresh icon on the extension
-4. Or remove and reinstall the extension
+1. **Export your current settings as a backup** (recommended):
+   - Open the extension popup
+   - Go to the Global tab → Settings section
+   - Click "Export Settings" to download your current configuration
+   - Keep this file as a backup in case you need to restore your settings
+2. Download the latest version from GitHub
+3. Extract the new files in to the same location as your current files
+4. Go to the extensions page
+5. Click the refresh icon on the extension
+6. Or remove and reinstall the extension
+7. **Import your settings** (if needed):
+   - After updating, if your settings were lost, use "Import Settings" to restore from your backup file
 
 ## Support
 

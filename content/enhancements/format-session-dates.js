@@ -273,7 +273,7 @@ class FormatSessionDatesEnhancement {
       /* Fixed width spans for date/time alignment */
       .session-date-part {
         display: inline-block !important;
-        width: 80px !important;
+        // width: 80px !important;
         text-align: left !important;
       }
       
