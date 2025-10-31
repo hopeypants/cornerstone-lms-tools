@@ -3517,6 +3517,12 @@ function setupSettingsManagement() {
       // Reload sessions checkbox defaults to update UI checkboxes
       await loadSessionsCheckboxDefaults();
       
+      // Reload transcript and assignment status settings to update color pickers and opacity sliders
+      // Get the reset settings to pass to load functions
+      const resetSettings = DEFAULT_SETTINGS;
+      loadTranscriptStatusSettings(resetSettings);
+      loadAssignmentStatusSettings(resetSettings);
+      
       // Clear proxy default text value in UI
       const proxyTextInput = document.getElementById('proxy-default-text-value');
       if (proxyTextInput) {
@@ -3528,32 +3534,52 @@ function setupSettingsManagement() {
       const aiIconSizeSlider = document.getElementById('ai-icon-size');
       const aiIconSizeValue = document.getElementById('ai-icon-size-value');
       if (aiIconSizeSlider && aiIconSizeValue) {
-        aiIconSizeSlider.value = DEFAULT_SETTINGS.resizeAIIconSize || 32;
-        aiIconSizeValue.textContent = `${DEFAULT_SETTINGS.resizeAIIconSize || 32}px`;
+        const defaultAISize = DEFAULT_SETTINGS.resizeAIIconSize || 32;
+        aiIconSizeSlider.value = defaultAISize;
+        aiIconSizeValue.textContent = `${defaultAISize}px`;
+        
+        // Save to storage and apply the size change
+        await chrome.storage.sync.set({ resizeAIIconSize: defaultAISize });
+        applyAIIconSize(defaultAISize);
       }
       
       // Pinned Links Icon Size
       const pinnedLinksIconSizeSlider = document.getElementById('pinned-links-icon-size');
       const pinnedLinksIconSizeValue = document.getElementById('pinned-links-icon-size-value');
       if (pinnedLinksIconSizeSlider && pinnedLinksIconSizeValue) {
-        pinnedLinksIconSizeSlider.value = DEFAULT_SETTINGS.resizePinnedLinksIconSize || 22;
-        pinnedLinksIconSizeValue.textContent = `${DEFAULT_SETTINGS.resizePinnedLinksIconSize || 22}px`;
+        const defaultPinnedLinksSize = DEFAULT_SETTINGS.resizePinnedLinksIconSize || 22;
+        pinnedLinksIconSizeSlider.value = defaultPinnedLinksSize;
+        pinnedLinksIconSizeValue.textContent = `${defaultPinnedLinksSize}px`;
+        
+        // Save to storage and apply the size change
+        await chrome.storage.sync.set({ resizePinnedLinksIconSize: defaultPinnedLinksSize });
+        applyPinnedLinksIconSize(defaultPinnedLinksSize);
       }
       
       // Custom Link Icon Size
       const customLinkIconSizeSlider = document.getElementById('custom-link-icon-size');
       const customLinkIconSizeValue = document.getElementById('custom-link-icon-size-value');
       if (customLinkIconSizeSlider && customLinkIconSizeValue) {
-        customLinkIconSizeSlider.value = DEFAULT_SETTINGS.customLinkIconSize || 20;
-        customLinkIconSizeValue.textContent = `${DEFAULT_SETTINGS.customLinkIconSize || 20}px`;
+        const defaultCustomLinkSize = DEFAULT_SETTINGS.customLinkIconSize || 20;
+        customLinkIconSizeSlider.value = defaultCustomLinkSize;
+        customLinkIconSizeValue.textContent = `${defaultCustomLinkSize}px`;
+        
+        // Save to storage and apply the size change
+        await chrome.storage.sync.set({ customLinkIconSize: defaultCustomLinkSize });
+        applyCustomLinkIconSize(defaultCustomLinkSize);
       }
       
       // Header Padding (default is 16px based on setupHeaderPaddingControl)
       const headerPaddingSlider = document.getElementById('header-padding');
       const headerPaddingValue = document.getElementById('header-padding-value');
       if (headerPaddingSlider && headerPaddingValue) {
-        headerPaddingSlider.value = 16;
-        headerPaddingValue.textContent = '16px';
+        const defaultPadding = 16;
+        headerPaddingSlider.value = defaultPadding;
+        headerPaddingValue.textContent = `${defaultPadding}px`;
+        
+        // Save to storage and apply the padding change
+        await chrome.storage.sync.set({ headerPadding: defaultPadding });
+        applyHeaderPadding(defaultPadding);
       }
 
       // Notify content scripts about all changes

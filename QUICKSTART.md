@@ -28,51 +28,6 @@ Get up and running with Cornerstone LMS Admin Tools in 5 minutes!
 4. **Configure** your preferences in the popup
 5. **Start using** the enhanced CSOD experience!
 
-## 🎯 Most Popular Features
-
-### Custom Header Links
-- Add shortcuts to frequently used CSOD pages
-- Choose from 30+ Font Awesome icons
-- Customize icon sizes (16px - 48px)
-- Drag and drop to reorder
-- Add separators between groups
-
-### Sessions Checkbox Defaults
-- Set which status checkboxes are checked by default
-- Default: Tentative and Approved checked
-- Saves time on Sessions pages
-- Remembers your preferences
-
-### Highlight Status Features
-- **Transcript Statuses**: Color-code transcript statuses for quick identification
-  - Available on UniversalProfile/Transcript pages
-  - Customizable colors and opacity
-- **Assignment Statuses**: Color-code assignment statuses for quick identification
-  - Available on EnrollTraining/EnrollTrainingManagement pages
-  - Customizable colors and opacity
-
-### Icon Resizing
-- **Galaxy AI Icon**: Resize the AI icon to your preference
-- **Pinned Links Icon**: Resize the Pinned Links icon
-- **Custom Header Icons**: Adjust icon size for all header links
-- Features only appear when icons are detected on the page
-
-### User Dropdown Defaults
-- Set default selections for User Status, OU Type, and Country
-- OU Type options dynamically load from the Users page
-- Speeds up user management tasks
-- Applies to all Users pages
-
-### Proxy As Another User
-- Set default comment text for proxy sessions
-- Optional auto-click Log In button
-- Only works on Admin/ProxyAsUser pages
-
-### Learning Object Links
-- Show/hide Preview, Details, Launch, and Register links
-- Copy LOID button for quick ID copying
-- Only available when LOID is detected on the page
-
 ## 🔧 Quick Tips
 
 - **Tab Persistence**: The extension remembers which tab you were on
