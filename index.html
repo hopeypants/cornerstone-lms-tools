@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A Chrome extension that enhances the Cornerstone LMS (CSOD) admin experience with powerful tools and utilities for administrators">
+    <title>Cornerstone LMS Admin Tools - Chrome Extension</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --secondary-color: #10b981;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --bg-card: #ffffff;
+            --border-color: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: var(--bg-secondary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #1e40af 100%);
+            color: white;
+            padding: 3rem 0;
+            box-shadow: var(--shadow-lg);
+        }
+
+        header .container {
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 1.25rem;
+            opacity: 0.95;
+            margin-bottom: 2rem;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            margin: 0.25rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .cta-buttons {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .btn-primary {
+            background: white;
+            color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background: var(--bg-secondary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border-color: white;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: var(--primary-color);
+        }
+
+        /* Main Content */
+        main {
+            padding: 4rem 0;
+        }
+
+        section {
+            margin-bottom: 4rem;
+        }
+
+        section h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+
+        section h3 {
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem;
+            color: var(--text-primary);
+        }
+
+        /* Feature Cards */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .feature-card h4 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            color: var(--primary-color);
+        }
+
+        .feature-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .feature-card ul li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .feature-card ul li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--secondary-color);
+            font-weight: bold;
+        }
+
+        /* Browser Compatibility */
+        .browser-list {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .browser-item {
+            background: var(--bg-card);
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+            flex: 1 1 200px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Code Block */
+        .code-block {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+        }
+
+        .code-block code {
+            color: #10b981;
+        }
+
+        /* Installation Steps */
+        .installation-steps {
+            background: var(--bg-card);
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            margin-top: 2rem;
+        }
+
+        .installation-steps ol {
+            padding-left: 1.5rem;
+        }
+
+        .installation-steps li {
+            margin: 1rem 0;
+            line-height: 1.8;
+        }
+
+        .installation-steps strong {
+            color: var(--primary-color);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--text-primary);
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+        }
+
+        footer a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 1.5rem 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2rem;
+            }
+
+            header p {
+                font-size: 1rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        /* Icons */
+        .icon {
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🚀 Cornerstone LMS Admin Tools</h1>
+            <p>Enhance your Cornerstone LMS (CSOD) admin experience with powerful tools and utilities</p>
+            <div>
+                <span class="badge">Chrome Extension</span>
+                <span class="badge">Manifest V3</span>
+                <span class="badge">Open Source</span>
+            </div>
+            <div class="cta-buttons">
+                <a href="https://github.com/hopeypants/cornerstone-lms-tools" class="btn btn-primary" target="_blank">View on GitHub</a>
+                <a href="#installation" class="btn btn-secondary">Get Started</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <!-- Features Section -->
+            <section id="features">
+                <h2>✨ Features</h2>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h4>🌐 Global Tools</h4>
+                        <ul>
+                            <li>Header Logout Link with icon</li>
+                            <li>Custom Header Links with drag & drop</li>
+                            <li>Customizable icon sizes (16px - 48px)</li>
+                            <li>Header padding adjustment</li>
+                            <li>Resize Galaxy AI & Pinned Links icons</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <h4>📚 Catalog Tools</h4>
+                        <ul>
+                            <li>Learning Object Links management</li>
+                            <li>Show/hide Preview, Details, Launch links</li>
+                            <li>Copy LOID functionality</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <h4>🎓 Instructor-Led Training</h4>
+                        <ul>
+                            <li>Toggle Tentative Column</li>
+                            <li>Highlight Zero Sessions</li>
+                            <li>Center Number Columns</li>
+                            <li>Highlight Full Sessions</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <h4>📅 Sessions Tools</h4>
+                        <ul>
+                            <li>Format Session Dates</li>
+                            <li>Highlight Zero Enrollments</li>
+                            <li>Center Enrollment Column</li>
+                            <li>Sessions Checkbox Defaults</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <h4>👥 Users Tools</h4>
+                        <ul>
+                            <li>User Status Dropdown Defaults</li>
+                            <li>OU Type Dropdown Defaults</li>
+                            <li>Country Dropdown Defaults</li>
+                            <li>Dynamic option loading</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <h4>📊 Transcript & Assignment</h4>
+                        <ul>
+                            <li>Color-code transcript statuses</li>
+                            <li>Highlight assignment statuses</li>
+                            <li>Customizable colors & opacity</li>
+                            <li>URL-based feature activation</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <h4>⚙️ Settings Management</h4>
+                        <ul>
+                            <li>Export/Import settings</li>
+                            <li>Turn Off All Features</li>
+                            <li>Reset All Features</li>
+                            <li>Timestamped backups</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <h4>🔧 Misc Tools</h4>
+                        <ul>
+                            <li>Proxy As Another User</li>
+                            <li>Custom Page Preview Links</li>
+                            <li>Auto-click Log In button</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Browser Compatibility -->
+            <section id="compatibility">
+                <h2>🎯 Browser Compatibility</h2>
+                <p>This extension works on all Chromium-based browsers:</p>
+                <div class="browser-list">
+                    <div class="browser-item">✅ Google Chrome</div>
+                    <div class="browser-item">✅ Microsoft Edge</div>
+                    <div class="browser-item">✅ Opera</div>
+                    <div class="browser-item">✅ Brave Browser</div>
+                    <div class="browser-item">✅ Vivaldi</div>
+                </div>
+            </section>
+
+            <!-- Installation -->
+            <section id="installation">
+                <h2>📦 Installation</h2>
+                <div class="installation-steps">
+                    <h3>From Source (Developer Mode)</h3>
+                    <ol>
+                        <li>
+                            <strong>Download the extension:</strong><br>
+                            <strong>Option A:</strong> Go to <a href="https://github.com/hopeypants/cornerstone-lms-tools" target="_blank">GitHub Repository</a>, click "Code" → "Download ZIP", and extract it.<br>
+                            <strong>Option B:</strong> Clone using Git:
+                            <div class="code-block">
+                                <code>git clone https://github.com/hopeypants/cornerstone-lms-tools.git<br>cd cornerstone-lms-tools</code>
+                            </div>
+                        </li>
+                        <li>
+                            <strong>Load in Chrome:</strong><br>
+                            Open Chrome → Go to <code>chrome://extensions/</code> → Enable "Developer mode" → Click "Load unpacked" → Select the extension folder
+                        </li>
+                        <li>
+                            <strong>Load in Edge/Opera/Brave/Vivaldi:</strong><br>
+                            Go to browser's extension management page → Enable "Developer mode" → Select the extension folder
+                        </li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Usage -->
+            <section id="usage">
+                <h2>📝 Usage</h2>
+                <div class="installation-steps">
+                    <ol>
+                        <li>Install the extension using the methods above</li>
+                        <li>Navigate to any CSOD page (<code>https://*.csod.com/*</code>)</li>
+                        <li>Click the extension icon in your browser toolbar</li>
+                        <li>Configure your preferences using the popup interface</li>
+                        <li>Features will automatically apply based on your settings and page context</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Configuration -->
+            <section id="configuration">
+                <h2>🔧 Configuration</h2>
+                <p>The extension provides a tabbed popup interface where you can:</p>
+                <ul style="margin-left: 2rem; margin-top: 1rem;">
+                    <li><strong>Global Tab:</strong> Configure header links, icon sizes, and global settings</li>
+                    <li><strong>Catalog Tab:</strong> Manage Learning Object link features</li>
+                    <li><strong>ILT Tab:</strong> Configure Instructor-Led Training enhancements</li>
+                    <li><strong>Users Tab:</strong> Set dropdown defaults for user management</li>
+                    <li><strong>Transcript Tab:</strong> Configure transcript status highlighting</li>
+                    <li><strong>Misc Tab:</strong> Proxy settings, custom pages, and assignment status highlighting</li>
+                </ul>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <h3 style="margin-bottom: 1rem;">Cornerstone LMS Admin Tools</h3>
+            <div class="footer-links">
+                <a href="https://github.com/hopeypants/cornerstone-lms-tools" target="_blank">GitHub Repository</a>
+                <a href="https://github.com/hopeypants/cornerstone-lms-tools/issues" target="_blank">Report Bug</a>
+                <a href="https://github.com/hopeypants/cornerstone-lms-tools/issues" target="_blank">Request Feature</a>
+                <a href="https://github.com/hopeypants/cornerstone-lms-tools/security/advisories/new" target="_blank">Security</a>
+            </div>
+            <p style="margin-top: 2rem; opacity: 0.8;">
+                Licensed under MIT License | Built for Cornerstone LMS administrators
+            </p>
+            <p style="margin-top: 0.5rem; opacity: 0.8;">
+                <a href="https://buymeacoffee.com/hopeypants" target="_blank">☕ Support the project</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>
+

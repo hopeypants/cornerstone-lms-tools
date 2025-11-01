@@ -35,6 +35,9 @@ class CustomHeaderLinksEnhancement {
       // Apply icon size to all icons (including default CSOD icons)
       this.applyIconSizeToAll();
       
+      // Setup MutationObserver to keep custom links at the start
+      this.setupHeaderItemsObserver();
+      
       console.log(`${this.name}: Custom links initialized with ${this.customLinks.length} links`);
     } catch (error) {
       console.warn(`${this.name}: Could not find header element`, error);
@@ -79,54 +82,58 @@ class CustomHeaderLinksEnhancement {
    * Apply icon size to all existing icons (including logout link and default CSOD icons)
    */
   applyIconSizeToAll() {
-    console.log(`${this.name}: Applying icon size ${this.iconSize}px to ${this.elements.length} elements`);
+    console.log(`${this.name}: Applying icon size ${this.iconSize}px to all FontAwesome icons in header items`);
     
-    // Apply to custom links
-    this.elements.forEach((element, index) => {
-      const icon = element.querySelector('i');
-      if (icon) {
-        this.applyIconSize(icon);
-      } else {
-        console.warn(`${this.name}: No icon found in element ${index}`);
-      }
-    });
-    
-    // Apply to logout link if it exists
-    const logoutElement = document.querySelector('.csod-custom-logout');
-    if (logoutElement) {
-      const logoutIcon = logoutElement.querySelector('i');
-      if (logoutIcon) {
-        this.applyIconSize(logoutIcon);
-        console.log(`${this.name}: Applied icon size to logout link icon`);
-      }
+    const header = document.querySelector('header.c-page-header');
+    if (!header) {
+      console.warn(`${this.name}: Could not find header element`);
+      return;
     }
     
-    // Apply to default CSOD nav-act icons (navigation menu icons)
-    const navActElements = document.querySelectorAll('.c-hdr-item.nav-act i');
-    navActElements.forEach((icon, index) => {
-      if (icon) {
-        this.applyIconSize(icon);
-        console.log(`${this.name}: Applied icon size to nav-act icon ${index}`);
-      }
-    });
+    // Find all .c-hdr-item elements in the header
+    const headerItems = header.querySelectorAll('.c-hdr-item');
+    let totalIconsApplied = 0;
     
-    // Apply to default CSOD search icons (only if search is not active)
-    const searchActive = document.querySelector('.c-global-search.active');
-    const searchElements = document.querySelectorAll('.c-hdr-item.search i');
-    searchElements.forEach((icon, index) => {
-      if (icon) {
-        if (searchActive) {
+    headerItems.forEach((headerItem, itemIndex) => {
+      // Check if this is a custom separator
+      if (headerItem.classList.contains('custom-separator')) {
+        const separatorSpan = headerItem.querySelector('span');
+        if (separatorSpan) {
+          // Separator has minimum font size of 30px, but can be larger if iconSize is larger
+          const separatorSize = Math.max(this.iconSize || 20, 30);
+          separatorSpan.style.fontSize = `${separatorSize}px`;
+          separatorSpan.style.setProperty('font-size', `${separatorSize}px`, 'important');
+          separatorSpan.style.fontWeight = '100';
+          separatorSpan.style.setProperty('font-weight', '100', 'important');
+          totalIconsApplied++;
+          console.log(`${this.name}: Applied font size ${separatorSize}px (min 30px) and weight 100 to separator in header item ${itemIndex}`);
+        }
+        return; // Skip icon processing for separators
+      }
+      
+      // Find all FontAwesome icons within this header item
+      // FontAwesome icons can have classes like: fa-icon-*, fa-solid, fa-regular, fa-brands, etc.
+      const faIcons = headerItem.querySelectorAll('i[class*="fa-icon-"], i[class*="fa-solid"], i[class*="fa-regular"], i[class*="fa-brands"], i[class^="fa-"]');
+      
+      faIcons.forEach((icon, iconIndex) => {
+        // Special handling for search icons when search is active
+        const isSearchItem = headerItem.classList.contains('search');
+        const searchActive = document.querySelector('.c-global-search.active');
+        
+        if (isSearchItem && searchActive) {
           // If search is active, set to 20px
           icon.style.fontSize = '20px';
           icon.style.setProperty('font-size', '20px', 'important');
-          console.log(`${this.name}: Applied 20px to active search icon ${index}`);
+          console.log(`${this.name}: Applied 20px to active search icon in header item ${itemIndex}`);
         } else {
-          // If search is not active, apply custom icon size
+          // Apply custom icon size
           this.applyIconSize(icon);
-          console.log(`${this.name}: Applied icon size to search icon ${index}`);
+          totalIconsApplied++;
         }
-      }
+      });
     });
+    
+    console.log(`${this.name}: Applied icon size to ${totalIconsApplied} FontAwesome icons and separators in header items`);
   }
   
   /**
@@ -134,15 +141,26 @@ class CustomHeaderLinksEnhancement {
    * @param {number} size - Size in pixels (or null to use custom icon size)
    */
   applySearchIconSize(size = null) {
-    const searchElements = document.querySelectorAll('.c-hdr-item.search i');
+    const header = document.querySelector('header.c-page-header');
+    if (!header) {
+      return;
+    }
+    
+    // Find all search header items
+    const searchItems = header.querySelectorAll('.c-hdr-item.search');
     const finalSize = size !== null ? size : this.iconSize;
     
-    searchElements.forEach((icon, index) => {
-      if (icon) {
-        icon.style.fontSize = `${finalSize}px`;
-        icon.style.setProperty('font-size', `${finalSize}px`, 'important');
-        console.log(`${this.name}: Applied ${finalSize}px to search icon ${index}`);
-      }
+    searchItems.forEach((searchItem, itemIndex) => {
+      // Find all FontAwesome icons within this search header item
+      const faIcons = searchItem.querySelectorAll('i[class*="fa-icon-"], i[class*="fa-solid"], i[class*="fa-regular"], i[class*="fa-brands"], i[class^="fa-"]');
+      
+      faIcons.forEach((icon, iconIndex) => {
+        if (icon) {
+          icon.style.fontSize = `${finalSize}px`;
+          icon.style.setProperty('font-size', `${finalSize}px`, 'important');
+          console.log(`${this.name}: Applied ${finalSize}px to search icon ${iconIndex} in search item ${itemIndex}`);
+        }
+      });
     });
   }
   
@@ -278,20 +296,6 @@ class CustomHeaderLinksEnhancement {
   }
 
   /**
-   * Cleanup the enhancement
-   */
-  cleanup() {
-    console.log(`${this.name}: Cleaning up...`);
-    this.elements.forEach(element => {
-      if (element && element.parentNode) {
-        element.parentNode.removeChild(element);
-      }
-    });
-    this.elements = [];
-    console.log(`${this.name}: Cleaned up successfully`);
-  }
-
-  /**
    * Load custom links from Chrome storage
    */
   async loadCustomLinks() {
@@ -327,12 +331,13 @@ class CustomHeaderLinksEnhancement {
   }
 
   /**
-   * Find the insertion point in the header
+   * Find the insertion point in the header (first non-custom header item)
    * @param {Element} header - The header element
-   * @returns {Element|null} - The element to insert before, or null if not found
+   * @returns {Element|null} - The element to insert before, or null to insert at start
    */
   findInsertionPoint(header) {
-    // Find the first default .c-hdr-item element (insert before all default header items)
+    // Find the first non-custom .c-hdr-item element (insert before all default header items)
+    // Exclude custom links and custom separators
     const headerItems = header.querySelectorAll('.c-hdr-item:not(.custom-separator):not([class*="custom-link-"])');
     
     if (headerItems.length > 0) {
@@ -341,16 +346,155 @@ class CustomHeaderLinksEnhancement {
       return firstItem;
     }
     
-    // Fallback: Try to find csod-custom-logout element (if Header Logout Link is active)
-    const logoutElement = header.querySelector('.csod-custom-logout');
-    if (logoutElement) {
-      console.log(`${this.name}: Using logout element as insertion point`);
-      return logoutElement;
+    // No header items found - will insert at start
+    console.log(`${this.name}: No existing header items found, will insert at start`);
+    return null;
+  }
+
+  /**
+   * Move all custom links to the start of the header (before all other header items)
+   */
+  moveCustomLinksToStart() {
+    const header = document.querySelector('header.c-page-header');
+    if (!header) {
+      return;
+    }
+
+    // Find all custom link elements (query DOM directly to be robust)
+    const allCustomLinks = header.querySelectorAll('.c-hdr-item[class*="custom-link-"], .c-hdr-item.custom-separator');
+    
+    if (allCustomLinks.length === 0) {
+      return;
+    }
+
+    // Find the first non-custom header item to insert before
+    const firstNonCustomItem = header.querySelector('.c-hdr-item:not(.custom-separator):not([class*="custom-link-"])');
+    
+    // Check if custom links are already at the start
+    const firstCustomLink = allCustomLinks[0];
+    if (firstNonCustomItem) {
+      // There are non-custom items - check if custom links are already before them
+      const allHeaderItems = Array.from(header.children);
+      const firstNonCustomIndex = allHeaderItems.indexOf(firstNonCustomItem);
+      const firstCustomIndex = allHeaderItems.indexOf(firstCustomLink);
+      
+      // If custom links are already before all non-custom items, no need to move
+      if (firstCustomIndex < firstNonCustomIndex) {
+        // Verify all custom links are grouped at the start
+        let allCustomAreFirst = true;
+        for (let i = 0; i < allCustomLinks.length; i++) {
+          const customIndex = allHeaderItems.indexOf(allCustomLinks[i]);
+          if (customIndex >= firstNonCustomIndex) {
+            allCustomAreFirst = false;
+            break;
+          }
+        }
+        if (allCustomAreFirst) {
+          // Already in the correct position, no need to move
+          return;
+        }
+      }
+    } else {
+      // No non-custom items exist - check if custom links are already first
+      const allHeaderItems = Array.from(header.children);
+      let allCustomAreFirst = true;
+      for (let i = 0; i < allCustomLinks.length; i++) {
+        if (allHeaderItems.indexOf(allCustomLinks[i]) !== i) {
+          allCustomAreFirst = false;
+          break;
+        }
+      }
+      if (allCustomAreFirst) {
+        // Already in the correct position, no need to move
+        return;
+      }
     }
     
-    // Last resort: Append to header
-    console.warn(`${this.name}: Could not find insertion point, will append to header`);
-    return null; // Will be handled in renderCustomLinks
+    // Move all custom links to before the first non-custom item (or to start if none exist)
+    // Reverse iteration to maintain order when inserting
+    const customLinksArray = Array.from(allCustomLinks);
+    for (let i = customLinksArray.length - 1; i >= 0; i--) {
+      const link = customLinksArray[i];
+      if (link && link.parentNode === header) {
+        if (firstNonCustomItem) {
+          header.insertBefore(link, firstNonCustomItem);
+        } else {
+          // If no non-custom items exist, move to start
+          if (header.firstChild) {
+            header.insertBefore(link, header.firstChild);
+          }
+        }
+      }
+    }
+    
+    console.log(`${this.name}: Moved ${customLinksArray.length} custom links to start of header`);
+  }
+
+  /**
+   * Setup MutationObserver to watch for new header items and keep custom links at the start
+   */
+  setupHeaderItemsObserver() {
+    const header = document.querySelector('header.c-page-header');
+    if (!header) {
+      console.warn(`${this.name}: Could not find header for MutationObserver`);
+      return;
+    }
+
+    // Use a flag to prevent infinite loops when we move elements
+    let isMovingCustomLinks = false;
+
+    const observer = new MutationObserver((mutations) => {
+      // Don't react if we're currently moving custom links
+      if (isMovingCustomLinks) {
+        return;
+      }
+
+      let shouldMove = false;
+
+      mutations.forEach((mutation) => {
+        // Check if new header items were added
+        if (mutation.type === 'childList') {
+          mutation.addedNodes.forEach((node) => {
+            // Check if the added node is a header item (and not a custom link)
+            if (node.nodeType === 1) { // Element node
+              if (node.classList && node.classList.contains('c-hdr-item')) {
+                // Only move if it's not a custom link or separator
+                if (!node.classList.contains('custom-separator') && 
+                    !node.className.includes('custom-link-')) {
+                  shouldMove = true;
+                }
+              }
+              // Also check if any child header items were added
+              if (node.querySelector && node.querySelector('.c-hdr-item:not(.custom-separator):not([class*="custom-link-"])')) {
+                shouldMove = true;
+              }
+            }
+          });
+        }
+      });
+
+      if (shouldMove) {
+        // Use setTimeout to avoid re-entrancy issues
+        setTimeout(() => {
+          isMovingCustomLinks = true;
+          this.moveCustomLinksToStart();
+          // Reset flag after a brief delay
+          setTimeout(() => {
+            isMovingCustomLinks = false;
+          }, 50);
+        }, 10);
+      }
+    });
+
+    // Observe the header for child additions/removals
+    observer.observe(header, {
+      childList: true,
+      subtree: false // Only watch direct children of header
+    });
+
+    // Store observer for cleanup
+    this.headerItemsObserver = observer;
+    console.log(`${this.name}: MutationObserver setup complete for header items`);
   }
 
   /**
@@ -366,33 +510,46 @@ class CustomHeaderLinksEnhancement {
     this.isRendering = true;
     
     try {
-      // Clear existing links first
-      this.elements.forEach(element => {
-        if (element && element.parentNode) {
-          element.parentNode.removeChild(element);
-        }
-      });
-      this.elements = [];
-
-      // Find insertion point
+      // Find insertion point first (before removing elements)
       const header = document.querySelector('header.c-page-header');
       if (!header) {
         console.warn(`${this.name}: Could not find header element`);
         return;
       }
 
+      // Clear existing links from DOM directly (more robust than relying on this.elements)
+      // Remove all custom link elements by querying the DOM directly
+      const existingCustomLinks = header.querySelectorAll('.c-hdr-item[class*="custom-link-"], .c-hdr-item.custom-separator');
+      const removedCount = existingCustomLinks.length;
+      existingCustomLinks.forEach(element => {
+        if (element && element.parentNode) {
+          element.parentNode.removeChild(element);
+        }
+      });
+      
+      // Also clear from this.elements array
+      this.elements = [];
+      
+      if (removedCount > 0) {
+        console.log(`${this.name}: Removed ${removedCount} existing custom link elements from DOM`);
+      }
+
       const insertionPoint = this.findInsertionPoint(header);
       
-      // Render each custom link directly to the header
+      // Render each custom link directly to the header, inserting at the start
       this.customLinks.forEach((link, index) => {
         const linkElement = this.createLinkElement(link, index);
         
         if (insertionPoint) {
-          // Insert before the insertion point
+          // Insert before the first non-custom header item
           insertionPoint.parentNode.insertBefore(linkElement, insertionPoint);
         } else {
-          // Append to header as fallback
-          header.appendChild(linkElement);
+          // No existing header items - insert at the very start
+          if (header.firstChild) {
+            header.insertBefore(linkElement, header.firstChild);
+          } else {
+            header.appendChild(linkElement);
+          }
         }
         
         this.elements.push(linkElement);
@@ -422,13 +579,16 @@ class CustomHeaderLinksEnhancement {
       
       const separatorSpan = document.createElement('span');
       separatorSpan.textContent = '|';
+      // Use iconSize for separator font-size with minimum of 30px
+      const separatorSize = Math.max(this.iconSize || 20, 30);
       separatorSpan.style.cssText = `
         color: white;
-        font-size: 30px;
-        font-weight: 300;
+        font-size: ${separatorSize}px;
+        font-weight: 100;
         user-select: none;
         line-height: 0;
       `;
+      separatorSpan.style.setProperty('font-size', `${separatorSize}px`, 'important');
       
       separatorDiv.appendChild(separatorSpan);
       return separatorDiv;
@@ -604,7 +764,28 @@ class CustomHeaderLinksEnhancement {
   async cleanup() {
     console.log(`${this.name}: Cleaning up DOM elements (preserving data)...`);
     
-    // Remove all custom link elements from the header
+    // Disconnect MutationObserver if it exists
+    if (this.headerItemsObserver) {
+      this.headerItemsObserver.disconnect();
+      this.headerItemsObserver = null;
+      console.log(`${this.name}: Disconnected header items MutationObserver`);
+    }
+    
+    // Remove all custom link elements from the DOM directly (more robust than relying on this.elements)
+    // This ensures cleanup even if this.elements is out of sync
+    const header = document.querySelector('header.c-page-header');
+    if (header) {
+      const existingCustomLinks = header.querySelectorAll('.c-hdr-item[class*="custom-link-"], .c-hdr-item.custom-separator');
+      const removedCount = existingCustomLinks.length;
+      existingCustomLinks.forEach(element => {
+        if (element && element.parentNode) {
+          element.parentNode.removeChild(element);
+        }
+      });
+      console.log(`${this.name}: Removed ${removedCount} custom link elements from DOM`);
+    }
+    
+    // Also remove elements tracked in this.elements
     this.elements.forEach(element => {
       if (element && element.parentNode) {
         element.parentNode.removeChild(element);
