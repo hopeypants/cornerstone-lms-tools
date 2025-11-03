@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="A Chrome extension that enhances the Cornerstone LMS (CSOD) admin experience with powerful tools and utilities for administrators">
     <title>Cornerstone LMS Admin Tools - Chrome Extension</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/icon16.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="icons/icon48.png">
+    <link rel="icon" type="image/png" sizes="128x128" href="icons/icon128.png">
+    <link rel="apple-touch-icon" href="icons/icon128.png">
     <style>
         * {
             margin: 0;
@@ -13,18 +17,18 @@
         }
 
         :root {
-            --primary-color: #2563eb;
-            --primary-hover: #1d4ed8;
+            --primary-color: #60a5fa;
+            --primary-hover: #3b82f6;
             --secondary-color: #10b981;
-            --text-primary: #1f2937;
-            --text-secondary: #6b7280;
-            --bg-primary: #ffffff;
-            --bg-secondary: #f9fafb;
-            --bg-card: #ffffff;
-            --border-color: #e5e7eb;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --bg-primary: #111827;
+            --bg-secondary: #1f2937;
+            --bg-card: #1f2937;
+            --border-color: #374151;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
         }
 
         body {
@@ -40,22 +44,79 @@
             padding: 0 20px;
         }
 
+        /* Navigation */
+        nav {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+            backdrop-filter: blur(10px);
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        nav a {
+            color: var(--text-primary);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            font-size: 0.9375rem;
+        }
+
+        nav a:hover {
+            background: var(--bg-secondary);
+            color: var(--primary-color);
+        }
+
         /* Header */
         header {
-            background: linear-gradient(135deg, var(--primary-color) 0%, #1e40af 100%);
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
             color: white;
             padding: 3rem 0;
             box-shadow: var(--shadow-lg);
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         header .container {
             text-align: center;
         }
 
+        .header-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1rem;
+            display: block;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
         header h1 {
             font-size: 2.5rem;
             margin-bottom: 0.5rem;
             font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        header h1 .title-icon {
+            width: 48px;
+            height: 48px;
+            vertical-align: middle;
         }
 
         header p {
@@ -94,11 +155,11 @@
 
         .btn-primary {
             background: white;
-            color: var(--primary-color);
+            color: #1e40af;
         }
 
         .btn-primary:hover {
-            background: var(--bg-secondary);
+            background: #e5e7eb;
             transform: translateY(-2px);
             box-shadow: var(--shadow-lg);
         }
@@ -204,7 +265,7 @@
 
         /* Code Block */
         .code-block {
-            background: #1f2937;
+            background: #111827;
             color: #f9fafb;
             padding: 1.5rem;
             border-radius: 0.5rem;
@@ -212,6 +273,7 @@
             margin: 1rem 0;
             font-family: 'Courier New', monospace;
             font-size: 0.875rem;
+            border: 1px solid var(--border-color);
         }
 
         .code-block code {
@@ -240,10 +302,40 @@
         .installation-steps strong {
             color: var(--primary-color);
         }
+        
+        .installation-steps a {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+        
+        .installation-steps a:hover {
+            color: var(--primary-hover);
+        }
+
+        .tip-box {
+            background: #1e3a8a;
+            border-left: 4px solid var(--primary-color);
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .tip-box strong {
+            color: var(--primary-color);
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .tip-box p {
+            margin: 0;
+            color: var(--text-primary);
+        }
 
         /* Footer */
         footer {
-            background: var(--text-primary);
+            background: #111827;
             color: white;
             padding: 3rem 0;
             text-align: center;
@@ -253,8 +345,9 @@
             color: #60a5fa;
             text-decoration: none;
         }
-
+        
         footer a:hover {
+            color: #93c5fd;
             text-decoration: underline;
         }
 
@@ -288,6 +381,25 @@
                 width: 100%;
                 text-align: center;
             }
+
+            nav .container {
+                gap: 0.5rem;
+            }
+
+            nav a {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.875rem;
+            }
+
+            .header-icon {
+                width: 64px;
+                height: 64px;
+            }
+
+            header h1 .title-icon {
+                width: 36px;
+                height: 36px;
+            }
         }
 
         /* Icons */
@@ -295,12 +407,33 @@
             display: inline-block;
             margin-right: 0.5rem;
         }
+
+        .footer-icon {
+            width: 32px;
+            height: 32px;
+            vertical-align: middle;
+            margin-right: 0.5rem;
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body>
+    <nav>
+        <div class="container">
+            <a href="#features">Features</a>
+            <a href="#compatibility">Compatibility</a>
+            <a href="#installation">Installation</a>
+            <a href="#usage">Usage</a>
+            <a href="#configuration">Configuration</a>
+        </div>
+    </nav>
     <header>
         <div class="container">
-            <h1>🚀 Cornerstone LMS Admin Tools</h1>
+            <img src="icons/icon128.png" alt="Cornerstone LMS Admin Tools Icon" class="header-icon">
+            <h1>
+                <img src="icons/icon48.png" alt="" class="title-icon">
+                Cornerstone LMS Admin Tools
+            </h1>
             <p>Enhance your Cornerstone LMS (CSOD) admin experience with powerful tools and utilities</p>
             <div>
                 <span class="badge">Chrome Extension</span>
@@ -377,6 +510,7 @@
                             <li>Color-code transcript statuses</li>
                             <li>Highlight assignment statuses</li>
                             <li>Customizable colors & opacity</li>
+                            <li>Reset to defaults buttons</li>
                             <li>URL-based feature activation</li>
                         </ul>
                     </div>
@@ -394,8 +528,11 @@
                     <div class="feature-card">
                         <h4>🔧 Misc Tools</h4>
                         <ul>
+                            <li>Highlight Environments (Production/Staging/Pilot)</li>
+                            <li>Environment header colors & watermarks</li>
                             <li>Proxy As Another User</li>
-                            <li>Custom Page Preview Links</li>
+                            <li>Custom Page Preview & Copy Links</li>
+                            <li>Resize Custom Pages Container</li>
                             <li>Auto-click Log In button</li>
                         </ul>
                     </div>
@@ -438,6 +575,10 @@
                             Go to browser's extension management page → Enable "Developer mode" → Select the extension folder
                         </li>
                     </ol>
+                    <div class="tip-box">
+                        <strong>💡 Pro Tip: Pin the Extension Icon</strong>
+                        <p>After installing, make sure to pin the extension icon to your browser toolbar for easy access. Click the puzzle piece icon (🧩) in Chrome or the extensions icon in other browsers, find "Cornerstone LMS Admin Tools", and click the pin icon (📌) to keep it visible in your toolbar.</p>
+                    </div>
                 </div>
             </section>
 
@@ -447,11 +588,16 @@
                 <div class="installation-steps">
                     <ol>
                         <li>Install the extension using the methods above</li>
+                        <li><strong>Pin the extension icon</strong> to your browser toolbar (click the puzzle piece/extensions icon → find "Cornerstone LMS Admin Tools" → click the pin icon)</li>
                         <li>Navigate to any CSOD page (<code>https://*.csod.com/*</code>)</li>
-                        <li>Click the extension icon in your browser toolbar</li>
+                        <li>Click the pinned extension icon in your browser toolbar</li>
                         <li>Configure your preferences using the popup interface</li>
                         <li>Features will automatically apply based on your settings and page context</li>
                     </ol>
+                    <div class="tip-box">
+                        <strong>🔍 Can't Find the Icon?</strong>
+                        <p>If you can't see the extension icon after installation, it's likely hidden in the extensions menu. Click the puzzle piece icon (🧩) in Chrome or the extensions icon in your browser toolbar, then pin "Cornerstone LMS Admin Tools" to make it always visible.</p>
+                    </div>
                 </div>
             </section>
 
@@ -465,7 +611,7 @@
                     <li><strong>ILT Tab:</strong> Configure Instructor-Led Training enhancements</li>
                     <li><strong>Users Tab:</strong> Set dropdown defaults for user management</li>
                     <li><strong>Transcript Tab:</strong> Configure transcript status highlighting</li>
-                    <li><strong>Misc Tab:</strong> Proxy settings, custom pages, and assignment status highlighting</li>
+                    <li><strong>Misc Tab:</strong> Environment highlighting, proxy settings, custom pages tools, and assignment status highlighting</li>
                 </ul>
             </section>
         </div>
@@ -473,7 +619,10 @@
 
     <footer>
         <div class="container">
-            <h3 style="margin-bottom: 1rem;">Cornerstone LMS Admin Tools</h3>
+            <h3 style="margin-bottom: 1rem;">
+                <img src="icons/icon48.png" alt="" class="footer-icon">
+                Cornerstone LMS Admin Tools
+            </h3>
             <div class="footer-links">
                 <a href="https://github.com/hopeypants/cornerstone-lms-tools" target="_blank">GitHub Repository</a>
                 <a href="https://github.com/hopeypants/cornerstone-lms-tools/issues" target="_blank">Report Bug</a>

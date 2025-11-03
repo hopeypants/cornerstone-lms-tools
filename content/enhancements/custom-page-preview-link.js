@@ -10,6 +10,29 @@
     constructor() {
       this.initialized = false;
       this.buttonsAdded = new Set();
+      this.styleInjected = false;
+    }
+
+    injectStyles() {
+      if (this.styleInjected) return;
+      
+      // Inject CSS to hide button by default and show on row hover
+      const styleId = 'custom-page-preview-link-styles';
+      if (document.getElementById(styleId)) return;
+      
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = `
+        table.CsList.tbl-std tbody tr .custom-page-preview-btn {
+          opacity: 0;
+          transition: opacity 0.2s ease;
+        }
+        table.CsList.tbl-std tbody tr:hover .custom-page-preview-btn {
+          opacity: 1;
+        }
+      `;
+      document.head.appendChild(style);
+      this.styleInjected = true;
     }
 
     async initialize() {
@@ -27,6 +50,9 @@
         const hasCustomPageId = table.querySelector('[id*="lblCustomPageId"]');
         if (!hasCustomPageId) return;
       }
+
+      // Inject styles for hover behavior
+      this.injectStyles();
 
       await this.addPreviewButtons();
       
@@ -53,6 +79,14 @@
         // Skip if button already added
         if (this.buttonsAdded.has(row)) return;
 
+        // Find the span with ID ending in "lblCustomPageId"
+        const customPageIdSpan = row.querySelector('span[id$="lblCustomPageId"]');
+        if (!customPageIdSpan) return;
+
+        // Set the span width to 74px (apply when this feature OR copy link feature is enabled)
+        customPageIdSpan.style.width = '74px';
+        customPageIdSpan.style.display = 'inline-block';
+
         // Find the URL column (second td) to extract the URL
         const cells = row.querySelectorAll('td');
         if (cells.length < 2) return;
@@ -76,12 +110,8 @@
           url = baseUrl + url;
         }
 
-        // Find the Options column (last td)
-        const optionsCell = cells[cells.length - 1]; // Last column
-        if (!optionsCell) return;
-
         // Check if button already exists
-        if (optionsCell.querySelector('.custom-page-preview-btn')) return;
+        if (customPageIdSpan.parentElement.querySelector('.custom-page-preview-btn')) return;
         
         // Create button styled like a button with text
         const button = document.createElement('a');
@@ -93,11 +123,21 @@
         button.setAttribute('aria-label', 'Open in new tab');
         button.title = 'Open in new tab';
         button.textContent = 'Open';
-        button.style.cssText = 'display: inline-block; margin-right: 8px; padding: 4px 8px; background: #667eea; color: white; text-decoration: none; border-radius: 4px; font-size: 12px; vertical-align: middle; font-weight: 500;';
+        button.style.cssText = 'display: inline-block; margin-left: 8px; padding: 4px 8px; background: #667eea; color: white; text-decoration: none; border-radius: 4px; font-size: 12px; vertical-align: middle; font-weight: 500;';
         
-        // Add button to the Options column (before the existing links, or at the end)
-        // Insert at the beginning so it appears first
-        optionsCell.insertBefore(button, optionsCell.firstChild);
+        // Insert button AFTER the span (on the right, first)
+        // Check if copy button already exists - if so, insert before it
+        const copyButton = customPageIdSpan.parentElement.querySelector('.custom-page-copy-btn');
+        if (copyButton) {
+          customPageIdSpan.parentElement.insertBefore(button, copyButton);
+        } else {
+          // No copy button, insert after span
+          if (customPageIdSpan.nextSibling) {
+            customPageIdSpan.parentElement.insertBefore(button, customPageIdSpan.nextSibling);
+          } else {
+            customPageIdSpan.parentElement.appendChild(button);
+          }
+        }
         
         // Mark as added
         this.buttonsAdded.add(row);
@@ -166,8 +206,8 @@
         rows.forEach((row) => {
           // Check if this row needs a button
           if (!this.buttonsAdded.has(row)) {
-            const optionsCell = row.querySelectorAll('td')[row.querySelectorAll('td').length - 1];
-            if (optionsCell && !optionsCell.querySelector('.custom-page-preview-btn')) {
+            const customPageIdSpan = row.querySelector('span[id$="lblCustomPageId"]');
+            if (customPageIdSpan && !customPageIdSpan.parentElement.querySelector('.custom-page-preview-btn')) {
               hasNewRows = true;
             }
           }
@@ -183,6 +223,25 @@
       // Remove all preview buttons
       const buttons = document.querySelectorAll('.custom-page-preview-btn');
       buttons.forEach(btn => btn.remove());
+      
+      // Remove injected styles
+      const style = document.getElementById('custom-page-preview-link-styles');
+      if (style) {
+        style.remove();
+        this.styleInjected = false;
+      }
+      
+      // Reset span widths only if copy link feature is also disabled
+      // Check if copy link feature is enabled
+      const copyLinkEnabled = await chrome.storage.sync.get(['customPageCopyLink']).then(result => result.customPageCopyLink || false);
+      if (!copyLinkEnabled) {
+        const spans = document.querySelectorAll('span[id$="lblCustomPageId"]');
+        spans.forEach(span => {
+          span.style.width = '';
+          span.style.display = '';
+        });
+      }
+      
       this.buttonsAdded.clear();
       
       // Disconnect observers

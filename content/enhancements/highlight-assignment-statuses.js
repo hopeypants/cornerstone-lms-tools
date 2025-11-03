@@ -8,10 +8,10 @@
 
   let isEnabled = false;
   let settings = {
-    processed: { enabled: true, color: '#0066cc', opacity: 10 },
+    active: { enabled: true, color: '#0066cc', opacity: 10 },
     queued: { enabled: true, color: '#ffaa00', opacity: 10 },
+    processed: { enabled: true, color: '#00aa00', opacity: 10 },
     cancelled: { enabled: true, color: '#000000', opacity: 10 },
-    active: { enabled: true, color: '#00aa00', opacity: 10 },
     inactive: { enabled: true, color: '#888888', opacity: 10 },
     drafts: { enabled: true, color: '#6b7280', opacity: 10 }
   };
@@ -91,7 +91,7 @@
     const spans = document.querySelectorAll('span');
     spans.forEach(span => {
       // Check each status type in the specified order
-      for (const statusType of ['processed', 'queued', 'cancelled', 'active', 'inactive', 'drafts']) {
+      for (const statusType of ['active', 'queued', 'processed', 'cancelled', 'inactive', 'drafts']) {
         if (matchesStatus(span, statusType)) {
           const li = findClosestLi(span);
           if (li) {
@@ -146,10 +146,10 @@
     // Load settings from storage
     chrome.storage.sync.get([
       'highlightAssignmentStatuses',
-      'assignmentProcessedEnabled', 'assignmentProcessedColor', 'assignmentProcessedOpacity',
-      'assignmentQueuedEnabled', 'assignmentQueuedColor', 'assignmentQueuedOpacity',
-      'assignmentCancelledEnabled', 'assignmentCancelledColor', 'assignmentCancelledOpacity',
       'assignmentActiveEnabled', 'assignmentActiveColor', 'assignmentActiveOpacity',
+      'assignmentQueuedEnabled', 'assignmentQueuedColor', 'assignmentQueuedOpacity',
+      'assignmentProcessedEnabled', 'assignmentProcessedColor', 'assignmentProcessedOpacity',
+      'assignmentCancelledEnabled', 'assignmentCancelledColor', 'assignmentCancelledOpacity',
       'assignmentInactiveEnabled', 'assignmentInactiveColor', 'assignmentInactiveOpacity',
       'assignmentDraftsEnabled', 'assignmentDraftsColor', 'assignmentDraftsOpacity'
     ], (result) => {
@@ -157,25 +157,25 @@
 
       // Update settings object
       const statusConfig = {
-        processed: {
-          enabled: result.assignmentProcessedEnabled !== undefined ? result.assignmentProcessedEnabled : true,
-          color: result.assignmentProcessedColor || '#0066cc',
-          opacity: result.assignmentProcessedOpacity !== undefined ? result.assignmentProcessedOpacity : 10
+        active: {
+          enabled: result.assignmentActiveEnabled !== undefined ? result.assignmentActiveEnabled : true,
+          color: result.assignmentActiveColor || '#0066cc',
+          opacity: result.assignmentActiveOpacity !== undefined ? result.assignmentActiveOpacity : 10
         },
         queued: {
           enabled: result.assignmentQueuedEnabled !== undefined ? result.assignmentQueuedEnabled : true,
           color: result.assignmentQueuedColor || '#ffaa00',
           opacity: result.assignmentQueuedOpacity !== undefined ? result.assignmentQueuedOpacity : 10
         },
+        processed: {
+          enabled: result.assignmentProcessedEnabled !== undefined ? result.assignmentProcessedEnabled : true,
+          color: result.assignmentProcessedColor || '#00aa00',
+          opacity: result.assignmentProcessedOpacity !== undefined ? result.assignmentProcessedOpacity : 10
+        },
         cancelled: {
           enabled: result.assignmentCancelledEnabled !== undefined ? result.assignmentCancelledEnabled : true,
           color: result.assignmentCancelledColor || '#000000',
           opacity: result.assignmentCancelledOpacity !== undefined ? result.assignmentCancelledOpacity : 10
-        },
-        active: {
-          enabled: result.assignmentActiveEnabled !== undefined ? result.assignmentActiveEnabled : true,
-          color: result.assignmentActiveColor || '#00aa00',
-          opacity: result.assignmentActiveOpacity !== undefined ? result.assignmentActiveOpacity : 10
         },
         inactive: {
           enabled: result.assignmentInactiveEnabled !== undefined ? result.assignmentInactiveEnabled : true,
@@ -226,10 +226,10 @@
     if (areaName === 'sync') {
       const assignmentKeys = [
         'highlightAssignmentStatuses',
-        'assignmentProcessedEnabled', 'assignmentProcessedColor', 'assignmentProcessedOpacity',
-        'assignmentQueuedEnabled', 'assignmentQueuedColor', 'assignmentQueuedOpacity',
-        'assignmentCancelledEnabled', 'assignmentCancelledColor', 'assignmentCancelledOpacity',
         'assignmentActiveEnabled', 'assignmentActiveColor', 'assignmentActiveOpacity',
+        'assignmentQueuedEnabled', 'assignmentQueuedColor', 'assignmentQueuedOpacity',
+        'assignmentProcessedEnabled', 'assignmentProcessedColor', 'assignmentProcessedOpacity',
+        'assignmentCancelledEnabled', 'assignmentCancelledColor', 'assignmentCancelledOpacity',
         'assignmentInactiveEnabled', 'assignmentInactiveColor', 'assignmentInactiveOpacity',
         'assignmentDraftsEnabled', 'assignmentDraftsColor', 'assignmentDraftsOpacity'
       ];

@@ -3,6 +3,72 @@
  * Handles settings UI, toggle switches, and storage synchronization
  */
 
+// Theme management
+const THEME_STORAGE_KEY = 'popupTheme';
+const DEFAULT_THEME = 'dark'; // Dark mode is default
+
+// Initialize theme on page load
+document.addEventListener('DOMContentLoaded', async () => {
+  await initializeTheme();
+});
+
+async function initializeTheme() {
+  try {
+    const result = await chrome.storage.sync.get([THEME_STORAGE_KEY]);
+    const theme = result[THEME_STORAGE_KEY] || DEFAULT_THEME;
+    applyTheme(theme);
+  } catch (error) {
+    console.error('Error loading theme:', error);
+    applyTheme(DEFAULT_THEME);
+  }
+  
+  // Setup theme toggle button
+  const themeToggle = document.getElementById('theme-toggle');
+  if (themeToggle) {
+    themeToggle.addEventListener('click', toggleTheme);
+    // Update icon based on current theme
+    updateThemeIcon();
+  }
+}
+
+function updateThemeIcon() {
+  const themeIcon = document.getElementById('theme-icon');
+  if (themeIcon) {
+    const isDark = document.body.classList.contains('dark-mode');
+    // Use emoji as they're more reliable than Font Awesome icons which may not be available
+    // Sun emoji in dark mode (click to switch to light), moon emoji in light mode (click to switch to dark)
+    themeIcon.textContent = isDark ? '☀️' : '🌙';
+    themeIcon.className = ''; // Clear any icon classes
+  }
+}
+
+function applyTheme(theme) {
+  const body = document.body;
+  
+  if (theme === 'dark') {
+    body.classList.add('dark-mode');
+    body.classList.remove('light-mode');
+  } else {
+    body.classList.add('light-mode');
+    body.classList.remove('dark-mode');
+  }
+  
+  updateThemeIcon();
+}
+
+async function toggleTheme() {
+  const currentTheme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  
+  applyTheme(newTheme);
+  
+  try {
+    await chrome.storage.sync.set({ [THEME_STORAGE_KEY]: newTheme });
+  } catch (error) {
+    console.error('Error saving theme:', error);
+  }
+}
+
 // Default settings for all features
 const DEFAULT_SETTINGS = {
   headerLogoutLink: false,
@@ -13,7 +79,7 @@ const DEFAULT_SETTINGS = {
   formatSessionDates: false,
   highlightZeroEnrollments: false,
   centerEnrollmentColumn: false,
-  customHeaderLinks: false,
+  // customHeaderLinks is stored as an array, not a boolean - use customHeaderLinksEnabled for the toggle
   resizeAIIcon: false,
   resizeAIIconSize: 32,
   resizePinnedLinksIcon: false,
@@ -39,8 +105,11 @@ const DEFAULT_SETTINGS = {
   transcriptPendingColor: '#ffaa00',
   transcriptPendingOpacity: 10,
   transcriptRegisteredEnabled: true,
-  transcriptRegisteredColor: '#00aa00',
+  transcriptRegisteredColor: '#9333ea',
   transcriptRegisteredOpacity: 10,
+  transcriptCompletedEnabled: true,
+  transcriptCompletedColor: '#00aa00',
+  transcriptCompletedOpacity: 10,
   transcriptInactiveEnabled: true,
   transcriptInactiveColor: '#888888',
   transcriptInactiveOpacity: 10,
@@ -50,24 +119,55 @@ const DEFAULT_SETTINGS = {
   transcriptCancelledEnabled: true,
   transcriptCancelledColor: '#000000',
   transcriptCancelledOpacity: 10,
+  transcriptDeniedEnabled: true,
+  transcriptDeniedColor: '#dc2626',
+  transcriptDeniedOpacity: 10,
   // Misc
   proxyDefaultText: false,
   proxyDefaultTextValue: '',
   proxyAutoClickLogin: false,
   customPagePreviewLink: false,
+  customPageCopyLink: false,
+  resizeCustomPagesContainer: false,
+  customPagesContainerWidth: 55,
+  highlightEnvironments: false,
+  environmentProductionExpanded: false,
+  environmentProductionEnabled: true,
+  environmentProductionHeaderColorEnabled: false,
+  environmentProductionColor: '#950606',
+  environmentProductionHeaderOpacity: 100,
+  environmentProductionWatermark: false,
+  environmentProductionWatermarkColor: '#000000',
+  environmentProductionWatermarkOpacity: 50,
+  environmentStagingExpanded: false,
+  environmentStagingEnabled: true,
+  environmentStagingHeaderColorEnabled: false,
+  environmentStagingColor: '#06402B',
+  environmentStagingHeaderOpacity: 100,
+  environmentStagingWatermark: false,
+  environmentStagingWatermarkColor: '#000000',
+  environmentStagingWatermarkOpacity: 50,
+  environmentPilotExpanded: false,
+  environmentPilotEnabled: true,
+  environmentPilotHeaderColorEnabled: false,
+  environmentPilotColor: '#111184',
+  environmentPilotHeaderOpacity: 100,
+  environmentPilotWatermark: false,
+  environmentPilotWatermarkColor: '#000000',
+  environmentPilotWatermarkOpacity: 50,
   highlightAssignmentStatuses: false,
-  assignmentProcessedEnabled: true,
-  assignmentProcessedColor: '#0066cc',
-  assignmentProcessedOpacity: 10,
+  assignmentActiveEnabled: true,
+  assignmentActiveColor: '#0066cc',
+  assignmentActiveOpacity: 10,
   assignmentQueuedEnabled: true,
   assignmentQueuedColor: '#ffaa00',
   assignmentQueuedOpacity: 10,
+  assignmentProcessedEnabled: true,
+  assignmentProcessedColor: '#00aa00',
+  assignmentProcessedOpacity: 10,
   assignmentCancelledEnabled: true,
   assignmentCancelledColor: '#000000',
   assignmentCancelledOpacity: 10,
-  assignmentActiveEnabled: true,
-  assignmentActiveColor: '#00aa00',
-  assignmentActiveOpacity: 10,
   assignmentInactiveEnabled: true,
   assignmentInactiveColor: '#888888',
   assignmentInactiveOpacity: 10,
@@ -90,7 +190,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupUserOuTypeDropdownManagement();
   setupUserCountryDropdownManagement();
   setupMiscProxySection();
+  setupResetButtons();
   setupAIIconSizeControl();
+  setupCustomPagesContainerWidth();
   setupPinnedLinksIconSizeControl();
   checkAIIconAvailability();
   checkPinnedLinksIconAvailability();
@@ -110,12 +212,20 @@ async function loadSettings() {
   try {
     const settings = await chrome.storage.sync.get(DEFAULT_SETTINGS);
     
-    // Special handling for customHeaderLinks - check the separate storage key
-    if (settings.customHeaderLinks !== undefined) {
-      // Check if we have the new storage key
-      const customLinksEnabled = await chrome.storage.sync.get(['customHeaderLinksEnabled']);
-      if (customLinksEnabled.customHeaderLinksEnabled !== undefined) {
-        settings.customHeaderLinks = customLinksEnabled.customHeaderLinksEnabled;
+    // Special handling for customHeaderLinks - always check the separate storage key
+    // customHeaderLinks is not in DEFAULT_SETTINGS (it's an array, not a boolean)
+    // So we always need to check customHeaderLinksEnabled separately
+    const customLinksEnabled = await chrome.storage.sync.get(['customHeaderLinksEnabled']);
+    if (customLinksEnabled.customHeaderLinksEnabled !== undefined) {
+      settings.customHeaderLinks = customLinksEnabled.customHeaderLinksEnabled;
+    } else {
+      // If not set, check if links exist and default to enabled if they do
+      const customLinksResult = await chrome.storage.sync.get(['customHeaderLinks']);
+      const customLinks = customLinksResult.customHeaderLinks;
+      if (Array.isArray(customLinks) && customLinks.length > 0) {
+        settings.customHeaderLinks = true;
+      } else {
+        settings.customHeaderLinks = false;
       }
     }
     
@@ -191,6 +301,18 @@ async function loadSettings() {
               }, 100);
             }
           }
+        } else if (feature === 'resizeCustomPagesContainer') {
+          const config = document.getElementById('resize-custom-pages-container-config');
+          if (config) config.style.display = settings[feature] ? 'block' : 'none';
+          
+          // Load width value
+          const widthInput = document.getElementById('custom-pages-container-width');
+          const widthValue = document.getElementById('custom-pages-container-width-value');
+          if (widthInput && widthValue) {
+            const width = settings.customPagesContainerWidth || 55;
+            widthInput.value = width;
+            widthValue.textContent = `${width}vw`;
+          }
         } else if (feature === 'proxyDefaultText') {
           const config = document.getElementById('proxy-default-text-config');
           if (config) config.style.display = settings[feature] ? 'block' : 'none';
@@ -238,6 +360,16 @@ async function loadSettings() {
               }, 100);
             }
           }
+        } else if (feature === 'highlightEnvironments') {
+          const settingsSection = document.getElementById('environment-settings');
+          if (settingsSection) {
+            settingsSection.style.display = settings[feature] ? 'block' : 'none';
+            if (settings[feature]) {
+              setTimeout(() => {
+                setupEnvironmentSettings();
+              }, 100);
+            }
+          }
         }
       }
     });
@@ -247,6 +379,9 @@ async function loadSettings() {
     
     // Load assignment status color and opacity settings
     loadAssignmentStatusSettings(settings);
+    
+    // Load environment settings
+    loadEnvironmentSettings(settings);
   } catch (error) {
     console.error('Error loading settings:', error);
     showStatus('Error loading settings', true);
@@ -333,6 +468,10 @@ function setupEventListeners() {
             }, 100);
           }
         }
+      } else if (feature === 'resizeCustomPagesContainer') {
+        // Show/hide config section
+        const config = document.getElementById('resize-custom-pages-container-config');
+        if (config) config.style.display = enabled ? 'block' : 'none';
       } else if (feature === 'proxyDefaultText') {
         // Enable/disable dependent toggle and show/hide config
         const config = document.getElementById('proxy-default-text-config');
@@ -381,6 +520,16 @@ function setupEventListeners() {
           if (enabled) {
             setTimeout(() => {
               setupAssignmentStatusSettings();
+            }, 100);
+          }
+        }
+      } else if (feature === 'highlightEnvironments') {
+        const settingsSection = document.getElementById('environment-settings');
+        if (settingsSection) {
+          settingsSection.style.display = enabled ? 'block' : 'none';
+          if (enabled) {
+            setTimeout(() => {
+              setupEnvironmentSettings();
             }, 100);
           }
         }
@@ -478,21 +627,62 @@ function setupMiscProxySection() {
 }
 
 /**
+ * Setup Custom Pages Container Width control
+ */
+function setupCustomPagesContainerWidth() {
+  const widthInput = document.getElementById('custom-pages-container-width');
+  const widthValue = document.getElementById('custom-pages-container-width-value');
+  
+  if (!widthInput || !widthValue) return;
+  
+  // Load saved width
+  chrome.storage.sync.get(['customPagesContainerWidth'], (result) => {
+    const width = result.customPagesContainerWidth || 55;
+    widthInput.value = width;
+    widthValue.textContent = `${width}vw`;
+  });
+  
+  // Debounce handler for width changes
+  let widthTimeout;
+  widthInput.addEventListener('input', async (e) => {
+    const width = parseInt(e.target.value);
+    widthValue.textContent = `${width}vw`;
+    
+    // Debounce the save operation
+    if (widthTimeout) {
+      clearTimeout(widthTimeout);
+    }
+    widthTimeout = setTimeout(async () => {
+      await saveSetting('customPagesContainerWidth', width);
+      await notifyContentScript('customPagesContainerWidth', width);
+    }, 150);
+  });
+}
+
+/**
  * Notify content script about setting changes
  * @param {string} feature - The feature name
- * @param {boolean} enabled - Whether the feature is enabled
+ * @param {boolean|number|string} value - The value (enabled boolean for toggles, or other value types)
  */
-async function notifyContentScript(feature, enabled) {
+async function notifyContentScript(feature, value) {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     
     // Only send message if on a csod.com domain
     if (tab && tab.url && tab.url.includes('csod.com')) {
-      chrome.tabs.sendMessage(tab.id, {
+      const message = {
         type: 'SETTING_CHANGED',
-        feature: feature,
-        enabled: enabled
-      }).catch(err => {
+        feature: feature
+      };
+      
+      // If value is a boolean, use 'enabled', otherwise use 'value'
+      if (typeof value === 'boolean') {
+        message.enabled = value;
+      } else {
+        message.value = value;
+      }
+      
+      chrome.tabs.sendMessage(tab.id, message).catch(err => {
         // Content script might not be loaded yet, that's okay
         console.log('Content script not ready:', err);
       });
@@ -677,6 +867,12 @@ function setupCustomLinksManagement() {
     addSeparator();
   });
 
+  // Add transcript links button
+  const addTranscriptLinksButton = document.getElementById('add-transcript-links');
+  addTranscriptLinksButton.addEventListener('click', () => {
+    addTranscriptLinks();
+  });
+
   // Add remove all button
   const removeAllButton = document.getElementById('remove-all-links');
   removeAllButton.addEventListener('click', () => {
@@ -772,6 +968,98 @@ const getIconClassForPopup = (iconName) => {
   }
   return fa3Class || 'icon-link';
 };
+
+/**
+ * Add default transcript links to custom links
+ */
+async function addTranscriptLinks() {
+  try {
+    const result = await chrome.storage.sync.get(['customHeaderLinks']);
+    let customLinks = result.customHeaderLinks;
+    
+    // Ensure customLinks is always an array - but preserve existing data
+    if (!Array.isArray(customLinks)) {
+      console.warn('customLinks is not an array, initializing as empty array but NOT saving:', customLinks);
+      customLinks = [];
+      // DO NOT save empty array - it might wipe out data during toggle operations
+    }
+    
+    // Define the 4 transcript links in reverse order
+    // We'll unshift them, so we define them backwards to get the correct final order
+    const transcriptLinks = [
+      {
+        label: 'Transcript: Archived',
+        url: '/phnx/driver.aspx?routename=Social/UniversalProfile/Transcript&preSelectedCategoryId=2',
+        icon: 'custom',
+        customIcon: 'icon-archive',
+        tooltip: 'Transcript: Archived',
+        openNewTab: false,
+        iconColor: '#ffffff'
+      },
+      {
+        label: 'Transcript: Completed',
+        url: '/phnx/driver.aspx?routename=Social/UniversalProfile/Transcript&preSelectedCategoryId=3',
+        icon: 'custom',
+        customIcon: 'icon-check',
+        tooltip: 'Transcript: Completed',
+        openNewTab: false,
+        iconColor: '#ffffff'
+      },
+      {
+        label: 'Transcript: Active',
+        url: '/phnx/driver.aspx?routename=Social/UniversalProfile/Transcript&preSelectedCategoryId=1',
+        icon: 'custom',
+        customIcon: 'icon-edit',
+        tooltip: 'Transcript: Active',
+        openNewTab: false,
+        iconColor: '#ffffff'
+      },
+      {
+        label: 'Transcript: All',
+        url: '/phnx/driver.aspx?routename=Social/UniversalProfile/Transcript&preSelectedCategoryId=9',
+        icon: 'custom',
+        customIcon: 'icon-list-alt',
+        tooltip: 'Transcript: All',
+        openNewTab: false,
+        iconColor: '#ffffff'
+      }
+    ];
+    
+    // Add all transcript links at the beginning (top of list = leftmost in header)
+    // unshift adds to the front, so we add them in reverse order to get the correct display order
+    for (let i = 0; i < transcriptLinks.length; i++) {
+      customLinks.unshift(transcriptLinks[i]);
+    }
+    
+    await chrome.storage.sync.set({ customHeaderLinks: customLinks });
+    
+    // If we're adding links and the feature isn't enabled, enable it
+    const toggle = document.querySelector('[data-feature="customHeaderLinks"]');
+    if (toggle && !toggle.checked) {
+      toggle.checked = true;
+      await saveSetting('customHeaderLinks', true);
+      console.log('Automatically enabled customHeaderLinks feature');
+    }
+    
+    // Notify content script about the change
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab && tab.url && tab.url.includes('csod.com')) {
+      chrome.tabs.sendMessage(tab.id, {
+        type: 'CUSTOM_LINKS_UPDATED',
+        customLinks: customLinks
+      }).catch(err => {
+        console.log('Content script not ready:', err);
+      });
+    }
+    
+    // Reload the custom links list
+    loadCustomLinks();
+    showStatus('Transcript links added successfully.', false);
+  } catch (error) {
+    console.error('Error adding transcript links:', error);
+    showStatus('Error adding transcript links', true);
+  }
+}
 
 /**
  * Add a separator to custom links
@@ -1127,7 +1415,7 @@ function createCustomLinkElement(link, index) {
   linkElement.innerHTML = `
     <div class="custom-link-drag-handle" title="Drag to reorder">⋮⋮</div>
     <div class="custom-link-icon">
-      <i class="${iconClass}"></i>
+      <i class="${iconClass}" ${link.iconColor && link.iconColor !== '#ffffff' ? `style="color: ${link.iconColor};"` : ''}></i>
     </div>
     <div class="custom-link-info">
       <div class="custom-link-label">${link.label}</div>
@@ -1206,6 +1494,18 @@ function showLinkForm(link = null, index = null) {
         <input type="text" id="link-tooltip" class="form-input" placeholder="e.g., View Reports" value="${link?.tooltip || ''}" maxlength="50">
       </div>
       
+      <div class="form-group">
+        <label class="form-label" for="link-icon-color-text">Icon Color (optional)</label>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <input type="text" id="link-icon-color-text" class="form-input" placeholder="#ffffff" value="${link?.iconColor || '#ffffff'}" style="flex: 1; max-width: 150px; font-family: monospace;" pattern="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$" autocomplete="off">
+          <input type="color" id="link-icon-color" value="${link?.iconColor || '#ffffff'}" style="width: 50px; height: 36px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; background: var(--bg-primary);" title="Pick a color (values will be in hex format)">
+          <button type="button" class="btn btn-secondary" id="reset-icon-color" style="padding: 4px 12px; font-size: 11px;">Reset</button>
+        </div>
+        <small style="color: var(--text-secondary); font-size: 11px; margin-top: 4px; display: block;">
+          Enter a hex color code or use the color picker. Color picker values are returned in hex format. Default is white (#ffffff).
+        </small>
+      </div>
+      
       <div class="form-actions">
         <button class="btn btn-secondary" id="cancel-link-btn">Cancel</button>
         <button class="btn btn-primary" id="save-link-btn" data-index="${index !== null ? index : ''}">${isEditing ? 'Update' : 'Add'} Link</button>
@@ -1218,6 +1518,38 @@ function showLinkForm(link = null, index = null) {
   // Add event listeners for buttons
   const cancelBtn = modal.querySelector('#cancel-link-btn');
   const saveBtn = modal.querySelector('#save-link-btn');
+  
+  // Setup color picker synchronization
+  const colorPicker = modal.querySelector('#link-icon-color');
+  const colorText = modal.querySelector('#link-icon-color-text');
+  const resetColorBtn = modal.querySelector('#reset-icon-color');
+  
+  // Sync color picker to text input (color picker always returns hex)
+  colorPicker.addEventListener('input', (e) => {
+    colorText.value = e.target.value;
+  });
+  
+  // Sync text input to color picker (with validation)
+  colorText.addEventListener('input', (e) => {
+    const colorValue = e.target.value.trim();
+    // Auto-add # if user types without it (for common hex codes)
+    if (colorValue.length > 0 && !colorValue.startsWith('#') && /^[A-Fa-f0-9]{3,6}$/.test(colorValue)) {
+      e.target.value = '#' + colorValue;
+      colorPicker.value = '#' + colorValue;
+    } else if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(colorValue)) {
+      // Update color picker if valid hex
+      const normalizedColor = colorValue.length === 4 
+        ? `#${colorValue[1]}${colorValue[1]}${colorValue[2]}${colorValue[2]}${colorValue[3]}${colorValue[3]}`
+        : colorValue;
+      colorPicker.value = normalizedColor;
+    }
+  });
+  
+  // Reset color button
+  resetColorBtn.addEventListener('click', () => {
+    colorPicker.value = '#ffffff';
+    colorText.value = '#ffffff';
+  });
   
   cancelBtn.addEventListener('click', closeLinkForm);
   saveBtn.addEventListener('click', () => {
@@ -1306,6 +1638,24 @@ async function saveCustomLink(index) {
   const url = document.getElementById('link-url').value.trim();
   const tooltip = document.getElementById('link-tooltip').value.trim();
   const openNewTab = document.getElementById('open-new-tab').checked;
+  // Get color from hex text input
+  const iconColorText = document.getElementById('link-icon-color-text').value.trim();
+  // Validate hex format and normalize (expand 3-digit to 6-digit)
+  let iconColor = '#ffffff'; // default
+  if (iconColorText) {
+    if (/^#([A-Fa-f0-9]{6})$/.test(iconColorText)) {
+      iconColor = iconColorText;
+    } else if (/^#([A-Fa-f0-9]{3})$/.test(iconColorText)) {
+      // Expand 3-digit hex to 6-digit
+      iconColor = `#${iconColorText[1]}${iconColorText[1]}${iconColorText[2]}${iconColorText[2]}${iconColorText[3]}${iconColorText[3]}`;
+    } else if (/^([A-Fa-f0-9]{6})$/.test(iconColorText)) {
+      // Handle hex without #
+      iconColor = '#' + iconColorText;
+    } else if (/^([A-Fa-f0-9]{3})$/.test(iconColorText)) {
+      // Handle 3-digit hex without #
+      iconColor = `#${iconColorText[0]}${iconColorText[0]}${iconColorText[1]}${iconColorText[1]}${iconColorText[2]}${iconColorText[2]}`;
+    }
+  }
   
   // Get selected icon from the modal's selected icon option
   const modal = document.querySelector('.link-form-modal');
@@ -1362,7 +1712,8 @@ async function saveCustomLink(index) {
       icon, 
       tooltip: tooltip || label,
       customIcon,
-      openNewTab
+      openNewTab,
+      iconColor: iconColor || '#ffffff'
     };
     console.log('Link data to save:', linkData);
 
@@ -1561,6 +1912,63 @@ function closeRemoveAllConfirmation() {
   if (modal) {
     modal.remove();
   }
+}
+
+/**
+ * Show a custom alert dialog (replaces alert())
+ * @param {string} message - The alert message
+ * @param {string} title - The dialog title (optional)
+ * @returns {Promise<void>} - Promise that resolves when the dialog is closed
+ */
+function showAlertDialog(message, title = 'Alert') {
+  return new Promise((resolve) => {
+    const modal = document.createElement('div');
+    modal.className = 'confirmation-modal';
+    
+    modal.innerHTML = `
+      <div class="confirmation-content">
+        <h3 class="confirmation-title">${title}</h3>
+        <p class="confirmation-message">${message.replace(/\n/g, '<br>')}</p>
+        
+        <div class="confirmation-actions">
+          <button class="btn btn-primary" id="ok-alert-btn">OK</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Add event listener for OK button
+    const okBtn = modal.querySelector('#ok-alert-btn');
+    
+    const closeModal = () => {
+      modal.remove();
+      resolve();
+    };
+    
+    okBtn.addEventListener('click', () => {
+      closeModal();
+    });
+    
+    // Close modal when clicking outside
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+    
+    // Close modal on Escape key
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+        document.removeEventListener('keydown', handleEscape);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    
+    // Focus the OK button for keyboard accessibility
+    okBtn.focus();
+  });
 }
 
 /**
@@ -3072,11 +3480,13 @@ function loadTranscriptStatusSettings(settings) {
   const statusMap = {
     'registered': { enabledKey: 'transcriptRegisteredEnabled', colorKey: 'transcriptRegisteredColor', opacityKey: 'transcriptRegisteredOpacity' },
     'in-progress': { enabledKey: 'transcriptInProgressEnabled', colorKey: 'transcriptInProgressColor', opacityKey: 'transcriptInProgressOpacity' },
+    'completed': { enabledKey: 'transcriptCompletedEnabled', colorKey: 'transcriptCompletedColor', opacityKey: 'transcriptCompletedOpacity' },
     'past-due': { enabledKey: 'transcriptPastDueEnabled', colorKey: 'transcriptPastDueColor', opacityKey: 'transcriptPastDueOpacity' },
     'pending': { enabledKey: 'transcriptPendingEnabled', colorKey: 'transcriptPendingColor', opacityKey: 'transcriptPendingOpacity' },
     'inactive': { enabledKey: 'transcriptInactiveEnabled', colorKey: 'transcriptInactiveColor', opacityKey: 'transcriptInactiveOpacity' },
     'withdrawn': { enabledKey: 'transcriptWithdrawnEnabled', colorKey: 'transcriptWithdrawnColor', opacityKey: 'transcriptWithdrawnOpacity' },
-    'cancelled': { enabledKey: 'transcriptCancelledEnabled', colorKey: 'transcriptCancelledColor', opacityKey: 'transcriptCancelledOpacity' }
+    'cancelled': { enabledKey: 'transcriptCancelledEnabled', colorKey: 'transcriptCancelledColor', opacityKey: 'transcriptCancelledOpacity' },
+    'denied': { enabledKey: 'transcriptDeniedEnabled', colorKey: 'transcriptDeniedColor', opacityKey: 'transcriptDeniedOpacity' }
   };
   
   Object.keys(statusMap).forEach(status => {
@@ -3090,8 +3500,21 @@ function loadTranscriptStatusSettings(settings) {
       enabledInput.checked = settings[enabledKey];
     }
     
-    if (colorInput && settings[colorKey]) {
-      colorInput.value = settings[colorKey];
+    if (colorInput) {
+      let colorValue = settings[colorKey];
+      // Migrate old green Registered color to new purple
+      if (status === 'registered' && colorValue === '#00aa00') {
+        colorValue = '#9333ea';
+        // Update the saved value
+        saveSetting(colorKey, colorValue).catch(err => console.error('Error migrating Registered color:', err));
+      }
+      // Use default if no saved value
+      if (!colorValue) {
+        colorValue = DEFAULT_SETTINGS[colorKey];
+      }
+      if (colorValue) {
+        colorInput.value = colorValue;
+      }
     }
     
     if (opacityInput && settings[opacityKey] !== undefined) {
@@ -3103,6 +3526,16 @@ function loadTranscriptStatusSettings(settings) {
   });
 }
 
+// Store event handlers to prevent duplicates
+const transcriptStatusHandlers = new Map();
+// Store opacity timeouts for debouncing
+const transcriptStatusTimeouts = new Map();
+
+// Store assignment status event handlers to prevent duplicates
+const assignmentStatusHandlers = new Map();
+// Store assignment status opacity timeouts for debouncing
+const assignmentStatusTimeouts = new Map();
+
 /**
  * Setup transcript status settings event listeners
  */
@@ -3110,11 +3543,13 @@ function setupTranscriptStatusSettings() {
   const statusMap = {
     'registered': { enabledKey: 'transcriptRegisteredEnabled', colorKey: 'transcriptRegisteredColor', opacityKey: 'transcriptRegisteredOpacity' },
     'in-progress': { enabledKey: 'transcriptInProgressEnabled', colorKey: 'transcriptInProgressColor', opacityKey: 'transcriptInProgressOpacity' },
+    'completed': { enabledKey: 'transcriptCompletedEnabled', colorKey: 'transcriptCompletedColor', opacityKey: 'transcriptCompletedOpacity' },
     'past-due': { enabledKey: 'transcriptPastDueEnabled', colorKey: 'transcriptPastDueColor', opacityKey: 'transcriptPastDueOpacity' },
     'pending': { enabledKey: 'transcriptPendingEnabled', colorKey: 'transcriptPendingColor', opacityKey: 'transcriptPendingOpacity' },
     'inactive': { enabledKey: 'transcriptInactiveEnabled', colorKey: 'transcriptInactiveColor', opacityKey: 'transcriptInactiveOpacity' },
     'withdrawn': { enabledKey: 'transcriptWithdrawnEnabled', colorKey: 'transcriptWithdrawnColor', opacityKey: 'transcriptWithdrawnOpacity' },
-    'cancelled': { enabledKey: 'transcriptCancelledEnabled', colorKey: 'transcriptCancelledColor', opacityKey: 'transcriptCancelledOpacity' }
+    'cancelled': { enabledKey: 'transcriptCancelledEnabled', colorKey: 'transcriptCancelledColor', opacityKey: 'transcriptCancelledOpacity' },
+    'denied': { enabledKey: 'transcriptDeniedEnabled', colorKey: 'transcriptDeniedColor', opacityKey: 'transcriptDeniedOpacity' }
   };
   
   Object.keys(statusMap).forEach(status => {
@@ -3124,31 +3559,68 @@ function setupTranscriptStatusSettings() {
     const opacityInput = document.getElementById(`transcript-${status}-opacity`);
     const opacityValue = document.getElementById(`transcript-${status}-opacity-value`);
     
+    // Remove existing listeners if they exist
+    const enabledKey_map = `enabled-${status}`;
+    const colorKey_map = `color-${status}`;
+    const opacityKey_map = `opacity-${status}`;
+    
     if (enabledInput) {
-      enabledInput.addEventListener('change', async (e) => {
+      if (transcriptStatusHandlers.has(enabledKey_map)) {
+        enabledInput.removeEventListener('change', transcriptStatusHandlers.get(enabledKey_map));
+      }
+      const enabledHandler = async (e) => {
         await saveSetting(enabledKey, e.target.checked);
         await notifyContentScript('transcriptSettingsChanged', {});
-      });
+      };
+      transcriptStatusHandlers.set(enabledKey_map, enabledHandler);
+      enabledInput.addEventListener('change', enabledHandler);
     }
     
     if (colorInput) {
-      colorInput.addEventListener('change', async (e) => {
+      if (transcriptStatusHandlers.has(colorKey_map)) {
+        colorInput.removeEventListener('change', transcriptStatusHandlers.get(colorKey_map));
+      }
+      const colorHandler = async (e) => {
         try {
           await saveSetting(colorKey, e.target.value);
           await notifyContentScript('transcriptSettingsChanged', {});
         } catch (error) {
           console.error('Error saving color setting:', error);
         }
-      });
+      };
+      transcriptStatusHandlers.set(colorKey_map, colorHandler);
+      colorInput.addEventListener('change', colorHandler);
     }
     
     if (opacityInput && opacityValue) {
-      opacityInput.addEventListener('input', async (e) => {
+      if (transcriptStatusHandlers.has(opacityKey_map)) {
+        opacityInput.removeEventListener('input', transcriptStatusHandlers.get(opacityKey_map));
+        // Clear any pending timeout
+        if (transcriptStatusTimeouts.has(opacityKey_map)) {
+          clearTimeout(transcriptStatusTimeouts.get(opacityKey_map));
+          transcriptStatusTimeouts.delete(opacityKey_map);
+        }
+      }
+      
+      const opacityHandler = (e) => {
         const value = e.target.value;
         opacityValue.textContent = `${value}%`;
-        await saveSetting(opacityKey, parseInt(value));
-        await notifyContentScript('transcriptSettingsChanged', {});
-      });
+        
+        // Clear previous timeout for this status
+        if (transcriptStatusTimeouts.has(opacityKey_map)) {
+          clearTimeout(transcriptStatusTimeouts.get(opacityKey_map));
+        }
+        
+        // Debounce the save operation to prevent blocking
+        const timeout = setTimeout(async () => {
+          await saveSetting(opacityKey, parseInt(value));
+          await notifyContentScript('transcriptSettingsChanged', {});
+          transcriptStatusTimeouts.delete(opacityKey_map);
+        }, 150);
+        transcriptStatusTimeouts.set(opacityKey_map, timeout);
+      };
+      transcriptStatusHandlers.set(opacityKey_map, opacityHandler);
+      opacityInput.addEventListener('input', opacityHandler);
     }
   });
 }
@@ -3158,10 +3630,10 @@ function setupTranscriptStatusSettings() {
  */
 function loadAssignmentStatusSettings(settings) {
   const statusMap = {
-    'processed': { enabledKey: 'assignmentProcessedEnabled', colorKey: 'assignmentProcessedColor', opacityKey: 'assignmentProcessedOpacity' },
-    'queued': { enabledKey: 'assignmentQueuedEnabled', colorKey: 'assignmentQueuedColor', opacityKey: 'assignmentQueuedOpacity' },
-    'cancelled': { enabledKey: 'assignmentCancelledEnabled', colorKey: 'assignmentCancelledColor', opacityKey: 'assignmentCancelledOpacity' },
     'active': { enabledKey: 'assignmentActiveEnabled', colorKey: 'assignmentActiveColor', opacityKey: 'assignmentActiveOpacity' },
+    'queued': { enabledKey: 'assignmentQueuedEnabled', colorKey: 'assignmentQueuedColor', opacityKey: 'assignmentQueuedOpacity' },
+    'processed': { enabledKey: 'assignmentProcessedEnabled', colorKey: 'assignmentProcessedColor', opacityKey: 'assignmentProcessedOpacity' },
+    'cancelled': { enabledKey: 'assignmentCancelledEnabled', colorKey: 'assignmentCancelledColor', opacityKey: 'assignmentCancelledOpacity' },
     'inactive': { enabledKey: 'assignmentInactiveEnabled', colorKey: 'assignmentInactiveColor', opacityKey: 'assignmentInactiveOpacity' },
     'drafts': { enabledKey: 'assignmentDraftsEnabled', colorKey: 'assignmentDraftsColor', opacityKey: 'assignmentDraftsOpacity' }
   };
@@ -3195,10 +3667,10 @@ function loadAssignmentStatusSettings(settings) {
  */
 function setupAssignmentStatusSettings() {
   const statusMap = {
-    'processed': { enabledKey: 'assignmentProcessedEnabled', colorKey: 'assignmentProcessedColor', opacityKey: 'assignmentProcessedOpacity' },
-    'queued': { enabledKey: 'assignmentQueuedEnabled', colorKey: 'assignmentQueuedColor', opacityKey: 'assignmentQueuedOpacity' },
-    'cancelled': { enabledKey: 'assignmentCancelledEnabled', colorKey: 'assignmentCancelledColor', opacityKey: 'assignmentCancelledOpacity' },
     'active': { enabledKey: 'assignmentActiveEnabled', colorKey: 'assignmentActiveColor', opacityKey: 'assignmentActiveOpacity' },
+    'queued': { enabledKey: 'assignmentQueuedEnabled', colorKey: 'assignmentQueuedColor', opacityKey: 'assignmentQueuedOpacity' },
+    'processed': { enabledKey: 'assignmentProcessedEnabled', colorKey: 'assignmentProcessedColor', opacityKey: 'assignmentProcessedOpacity' },
+    'cancelled': { enabledKey: 'assignmentCancelledEnabled', colorKey: 'assignmentCancelledColor', opacityKey: 'assignmentCancelledOpacity' },
     'inactive': { enabledKey: 'assignmentInactiveEnabled', colorKey: 'assignmentInactiveColor', opacityKey: 'assignmentInactiveOpacity' },
     'drafts': { enabledKey: 'assignmentDraftsEnabled', colorKey: 'assignmentDraftsColor', opacityKey: 'assignmentDraftsOpacity' }
   };
@@ -3210,33 +3682,469 @@ function setupAssignmentStatusSettings() {
     const opacityInput = document.getElementById(`assignment-${status}-opacity`);
     const opacityValue = document.getElementById(`assignment-${status}-opacity-value`);
     
+    // Remove existing listeners if they exist
+    const enabledKey_map = `enabled-${status}`;
+    const colorKey_map = `color-${status}`;
+    const opacityKey_map = `opacity-${status}`;
+    
     if (enabledInput) {
-      enabledInput.addEventListener('change', async (e) => {
+      if (assignmentStatusHandlers.has(enabledKey_map)) {
+        enabledInput.removeEventListener('change', assignmentStatusHandlers.get(enabledKey_map));
+      }
+      const enabledHandler = async (e) => {
         await saveSetting(enabledKey, e.target.checked);
         await notifyContentScript('assignmentSettingsChanged', {});
-      });
+      };
+      assignmentStatusHandlers.set(enabledKey_map, enabledHandler);
+      enabledInput.addEventListener('change', enabledHandler);
     }
     
     if (colorInput) {
-      colorInput.addEventListener('change', async (e) => {
+      if (assignmentStatusHandlers.has(colorKey_map)) {
+        colorInput.removeEventListener('change', assignmentStatusHandlers.get(colorKey_map));
+      }
+      const colorHandler = async (e) => {
         try {
           await saveSetting(colorKey, e.target.value);
           await notifyContentScript('assignmentSettingsChanged', {});
         } catch (error) {
           console.error('Error saving color setting:', error);
         }
-      });
+      };
+      assignmentStatusHandlers.set(colorKey_map, colorHandler);
+      colorInput.addEventListener('change', colorHandler);
     }
     
     if (opacityInput && opacityValue) {
-      opacityInput.addEventListener('input', async (e) => {
+      if (assignmentStatusHandlers.has(opacityKey_map)) {
+        opacityInput.removeEventListener('input', assignmentStatusHandlers.get(opacityKey_map));
+        // Clear any pending timeout
+        if (assignmentStatusTimeouts.has(opacityKey_map)) {
+          clearTimeout(assignmentStatusTimeouts.get(opacityKey_map));
+          assignmentStatusTimeouts.delete(opacityKey_map);
+        }
+      }
+      
+      const opacityHandler = (e) => {
         const value = e.target.value;
         opacityValue.textContent = `${value}%`;
-        await saveSetting(opacityKey, parseInt(value));
-        await notifyContentScript('assignmentSettingsChanged', {});
+        
+        // Clear previous timeout for this status
+        if (assignmentStatusTimeouts.has(opacityKey_map)) {
+          clearTimeout(assignmentStatusTimeouts.get(opacityKey_map));
+        }
+        
+        // Debounce the save operation to prevent blocking
+        const timeout = setTimeout(async () => {
+          await saveSetting(opacityKey, parseInt(value));
+          await notifyContentScript('assignmentSettingsChanged', {});
+          assignmentStatusTimeouts.delete(opacityKey_map);
+        }, 150);
+        assignmentStatusTimeouts.set(opacityKey_map, timeout);
+      };
+      assignmentStatusHandlers.set(opacityKey_map, opacityHandler);
+      opacityInput.addEventListener('input', opacityHandler);
+    }
+  });
+}
+
+/**
+ * Load environment settings
+ */
+function loadEnvironmentSettings(settings) {
+  const environments = ['production', 'staging', 'pilot'];
+  
+  environments.forEach(env => {
+    const envCapitalized = env.charAt(0).toUpperCase() + env.slice(1);
+    
+    // Expand toggle
+    const expandInput = document.getElementById(`environment-${env}-expand`);
+    const settingsContainer = document.getElementById(`environment-${env}-settings`);
+    if (expandInput) {
+      const expanded = settings[`environment${envCapitalized}Expanded`] || false;
+      expandInput.checked = expanded;
+      if (settingsContainer) {
+        settingsContainer.style.display = expanded ? 'block' : 'none';
+      }
+      
+      // Sync enabled state: if collapsed, ensure it's disabled (but settings are preserved)
+      // If expanded, use the stored enabled value or default to true
+      if (!expanded) {
+        // Collapsed = disabled, but don't overwrite settings
+        // The enabled state will be set to false when the toggle changes
+      }
+    }
+    
+    // Header color toggle
+    const headerColorEnabledInput = document.getElementById(`environment-${env}-header-color-enabled`);
+    const headerColorOptions = document.getElementById(`environment-${env}-header-color-options`);
+    if (headerColorEnabledInput) {
+      const enabled = settings[`environment${envCapitalized}HeaderColorEnabled`] || false;
+      headerColorEnabledInput.checked = enabled;
+      if (headerColorOptions) {
+        headerColorOptions.style.display = enabled ? 'block' : 'none';
+      }
+    }
+    
+    // Header color
+    const colorInput = document.getElementById(`environment-${env}-color`);
+    if (colorInput) {
+      const colorValue = settings[`environment${envCapitalized}Color`] || DEFAULT_SETTINGS[`environment${envCapitalized}Color`];
+      if (colorValue) {
+        colorInput.value = colorValue;
+      }
+    }
+    
+    // Header opacity
+    const headerOpacityInput = document.getElementById(`environment-${env}-header-opacity`);
+    const headerOpacityValue = document.getElementById(`environment-${env}-header-opacity-value`);
+    if (headerOpacityInput) {
+      const opacity = settings[`environment${envCapitalized}HeaderOpacity`] !== undefined ? settings[`environment${envCapitalized}HeaderOpacity`] : 100;
+      headerOpacityInput.value = opacity;
+      if (headerOpacityValue) {
+        headerOpacityValue.textContent = `${opacity}%`;
+      }
+    }
+    
+    // Watermark toggle
+    const watermarkInput = document.getElementById(`environment-${env}-watermark`);
+    const watermarkOptions = document.getElementById(`environment-${env}-watermark-options`);
+    if (watermarkInput) {
+      const enabled = settings[`environment${envCapitalized}Watermark`] || false;
+      watermarkInput.checked = enabled;
+      if (watermarkOptions) {
+        watermarkOptions.style.display = enabled ? 'block' : 'none';
+      }
+    }
+    
+    // Watermark color
+    const watermarkColorInput = document.getElementById(`environment-${env}-watermark-color`);
+    if (watermarkColorInput) {
+      const colorValue = settings[`environment${envCapitalized}WatermarkColor`] || DEFAULT_SETTINGS[`environment${envCapitalized}WatermarkColor`];
+      if (colorValue) {
+        watermarkColorInput.value = colorValue;
+      }
+    }
+    
+    // Watermark opacity
+    const watermarkOpacityInput = document.getElementById(`environment-${env}-watermark-opacity`);
+    const watermarkOpacityValue = document.getElementById(`environment-${env}-watermark-opacity-value`);
+    if (watermarkOpacityInput) {
+      const opacity = settings[`environment${envCapitalized}WatermarkOpacity`] !== undefined ? settings[`environment${envCapitalized}WatermarkOpacity`] : 50;
+      watermarkOpacityInput.value = opacity;
+      if (watermarkOpacityValue) {
+        watermarkOpacityValue.textContent = `${opacity}%`;
+      }
+    }
+  });
+}
+
+/**
+ * Setup environment settings event listeners
+ */
+function setupEnvironmentSettings() {
+  const environments = ['production', 'staging', 'pilot'];
+  
+  environments.forEach(env => {
+    const envCapitalized = env.charAt(0).toUpperCase() + env.slice(1);
+    
+    // Expand toggle
+    const expandInput = document.getElementById(`environment-${env}-expand`);
+    const settingsContainer = document.getElementById(`environment-${env}-settings`);
+    if (expandInput && settingsContainer) {
+      expandInput.addEventListener('change', async (e) => {
+        const isExpanded = e.target.checked;
+        settingsContainer.style.display = isExpanded ? 'block' : 'none';
+        await saveSetting(`environment${envCapitalized}Expanded`, isExpanded);
+        
+        // When collapsed, disable the environment (but remember settings)
+        // When expanded, restore the environment state
+        if (!isExpanded) {
+          // Save enabled state as false, but keep all other settings
+          await saveSetting(`environment${envCapitalized}Enabled`, false);
+          await notifyContentScript('environmentSettingsChanged', {});
+        } else {
+          // When expanded, restore enabled state (settings are already in storage)
+          await saveSetting(`environment${envCapitalized}Enabled`, true);
+          await notifyContentScript('environmentSettingsChanged', {});
+        }
+      });
+    }
+    
+    // Header color toggle
+    const headerColorEnabledInput = document.getElementById(`environment-${env}-header-color-enabled`);
+    const headerColorOptions = document.getElementById(`environment-${env}-header-color-options`);
+    if (headerColorEnabledInput && headerColorOptions) {
+      headerColorEnabledInput.addEventListener('change', async (e) => {
+        const isEnabled = e.target.checked;
+        headerColorOptions.style.display = isEnabled ? 'block' : 'none';
+        await saveSetting(`environment${envCapitalized}HeaderColorEnabled`, isEnabled);
+        await notifyContentScript('environmentSettingsChanged', {});
+      });
+    }
+    
+    // Header color
+    const colorInput = document.getElementById(`environment-${env}-color`);
+    if (colorInput) {
+      colorInput.addEventListener('change', async (e) => {
+        try {
+          await saveSetting(`environment${envCapitalized}Color`, e.target.value);
+          await notifyContentScript('environmentSettingsChanged', {});
+        } catch (error) {
+          console.error('Error saving environment color setting:', error);
+        }
+      });
+    }
+    
+    // Header opacity
+    const headerOpacityInput = document.getElementById(`environment-${env}-header-opacity`);
+    const headerOpacityValue = document.getElementById(`environment-${env}-header-opacity-value`);
+    if (headerOpacityInput && headerOpacityValue) {
+      let headerOpacityTimeout;
+      const headerOpacityHandler = (e) => {
+        const value = e.target.value;
+        headerOpacityValue.textContent = `${value}%`;
+        
+        if (headerOpacityTimeout) {
+          clearTimeout(headerOpacityTimeout);
+        }
+        
+        headerOpacityTimeout = setTimeout(async () => {
+          await saveSetting(`environment${envCapitalized}HeaderOpacity`, parseInt(value));
+          await notifyContentScript('environmentSettingsChanged', {});
+        }, 150);
+      };
+      headerOpacityInput.addEventListener('input', headerOpacityHandler);
+    }
+    
+    // Watermark toggle
+    const watermarkInput = document.getElementById(`environment-${env}-watermark`);
+    const watermarkOptions = document.getElementById(`environment-${env}-watermark-options`);
+    if (watermarkInput && watermarkOptions) {
+      watermarkInput.addEventListener('change', async (e) => {
+        const isEnabled = e.target.checked;
+        watermarkOptions.style.display = isEnabled ? 'block' : 'none';
+        await saveSetting(`environment${envCapitalized}Watermark`, isEnabled);
+        await notifyContentScript('environmentSettingsChanged', {});
+      });
+    }
+    
+    // Watermark color
+    const watermarkColorInput = document.getElementById(`environment-${env}-watermark-color`);
+    if (watermarkColorInput) {
+      watermarkColorInput.addEventListener('change', async (e) => {
+        try {
+          await saveSetting(`environment${envCapitalized}WatermarkColor`, e.target.value);
+          await notifyContentScript('environmentSettingsChanged', {});
+        } catch (error) {
+          console.error('Error saving watermark color setting:', error);
+        }
+      });
+    }
+    
+    // Watermark opacity
+    const watermarkOpacityInput = document.getElementById(`environment-${env}-watermark-opacity`);
+    const watermarkOpacityValue = document.getElementById(`environment-${env}-watermark-opacity-value`);
+    if (watermarkOpacityInput && watermarkOpacityValue) {
+      let watermarkOpacityTimeout;
+      const watermarkOpacityHandler = (e) => {
+        const value = e.target.value;
+        watermarkOpacityValue.textContent = `${value}%`;
+        
+        if (watermarkOpacityTimeout) {
+          clearTimeout(watermarkOpacityTimeout);
+        }
+        
+        watermarkOpacityTimeout = setTimeout(async () => {
+          await saveSetting(`environment${envCapitalized}WatermarkOpacity`, parseInt(value));
+          await notifyContentScript('environmentSettingsChanged', {});
+        }, 150);
+      };
+      watermarkOpacityInput.addEventListener('input', watermarkOpacityHandler);
+    }
+    
+    // Reset button
+    const resetButton = document.getElementById(`reset-environment-${env}`);
+    if (resetButton) {
+      resetButton.addEventListener('click', async () => {
+        const confirmed = await showConfirmationDialog(
+          `Reset ${envCapitalized} environment settings to defaults?`,
+          'Reset to Defaults'
+        );
+        if (confirmed) {
+          await resetEnvironmentToDefaults(env, envCapitalized);
+        }
       });
     }
   });
+}
+
+/**
+ * Reset environment settings to defaults
+ */
+async function resetEnvironmentToDefaults(env, envCapitalized) {
+  // Default values based on environment (only colors and values, not toggles)
+  const defaults = {
+    production: {
+      color: '#950606',
+      headerOpacity: 100,
+      watermarkColor: '#000000',
+      watermarkOpacity: 50
+    },
+    staging: {
+      color: '#06402B',
+      headerOpacity: 100,
+      watermarkColor: '#000000',
+      watermarkOpacity: 50
+    },
+    pilot: {
+      color: '#111184',
+      headerOpacity: 100,
+      watermarkColor: '#000000',
+      watermarkOpacity: 50
+    }
+  };
+  
+  const envDefaults = defaults[env];
+  
+  // Get current toggle states (don't change them)
+  const headerColorEnabledInput = document.getElementById(`environment-${env}-header-color-enabled`);
+  const watermarkInput = document.getElementById(`environment-${env}-watermark`);
+  
+  // Only reset color and value settings, keep toggles as they are
+  await saveSetting(`environment${envCapitalized}Color`, envDefaults.color);
+  await saveSetting(`environment${envCapitalized}HeaderOpacity`, envDefaults.headerOpacity);
+  await saveSetting(`environment${envCapitalized}WatermarkColor`, envDefaults.watermarkColor);
+  await saveSetting(`environment${envCapitalized}WatermarkOpacity`, envDefaults.watermarkOpacity);
+  
+  // Update UI - only reset color and value inputs, keep toggles unchanged
+  const headerColorInput = document.getElementById(`environment-${env}-color`);
+  const headerOpacityInput = document.getElementById(`environment-${env}-header-opacity`);
+  const headerOpacityValue = document.getElementById(`environment-${env}-header-opacity-value`);
+  const watermarkColorInput = document.getElementById(`environment-${env}-watermark-color`);
+  const watermarkOpacityInput = document.getElementById(`environment-${env}-watermark-opacity`);
+  const watermarkOpacityValue = document.getElementById(`environment-${env}-watermark-opacity-value`);
+  
+  if (headerColorInput) {
+    headerColorInput.value = envDefaults.color;
+  }
+  if (headerOpacityInput) {
+    headerOpacityInput.value = envDefaults.headerOpacity;
+    if (headerOpacityValue) {
+      headerOpacityValue.textContent = `${envDefaults.headerOpacity}%`;
+    }
+  }
+  if (watermarkColorInput) {
+    watermarkColorInput.value = envDefaults.watermarkColor;
+  }
+  if (watermarkOpacityInput) {
+    watermarkOpacityInput.value = envDefaults.watermarkOpacity;
+    if (watermarkOpacityValue) {
+      watermarkOpacityValue.textContent = `${envDefaults.watermarkOpacity}%`;
+    }
+  }
+  
+  // Notify content script
+  await notifyContentScript('environmentSettingsChanged', {});
+  
+  showStatus(`${envCapitalized} environment colors and values reset to defaults`, false);
+}
+
+/**
+ * Reset transcript status settings to defaults
+ */
+async function resetTranscriptStatusSettings() {
+  const defaults = {
+    transcriptPastDueEnabled: DEFAULT_SETTINGS.transcriptPastDueEnabled,
+    transcriptPastDueColor: DEFAULT_SETTINGS.transcriptPastDueColor,
+    transcriptPastDueOpacity: DEFAULT_SETTINGS.transcriptPastDueOpacity,
+    transcriptInProgressEnabled: DEFAULT_SETTINGS.transcriptInProgressEnabled,
+    transcriptInProgressColor: DEFAULT_SETTINGS.transcriptInProgressColor,
+    transcriptInProgressOpacity: DEFAULT_SETTINGS.transcriptInProgressOpacity,
+    transcriptPendingEnabled: DEFAULT_SETTINGS.transcriptPendingEnabled,
+    transcriptPendingColor: DEFAULT_SETTINGS.transcriptPendingColor,
+    transcriptPendingOpacity: DEFAULT_SETTINGS.transcriptPendingOpacity,
+    transcriptRegisteredEnabled: DEFAULT_SETTINGS.transcriptRegisteredEnabled,
+    transcriptRegisteredColor: DEFAULT_SETTINGS.transcriptRegisteredColor,
+    transcriptRegisteredOpacity: DEFAULT_SETTINGS.transcriptRegisteredOpacity,
+    transcriptCompletedEnabled: DEFAULT_SETTINGS.transcriptCompletedEnabled,
+    transcriptCompletedColor: DEFAULT_SETTINGS.transcriptCompletedColor,
+    transcriptCompletedOpacity: DEFAULT_SETTINGS.transcriptCompletedOpacity,
+    transcriptInactiveEnabled: DEFAULT_SETTINGS.transcriptInactiveEnabled,
+    transcriptInactiveColor: DEFAULT_SETTINGS.transcriptInactiveColor,
+    transcriptInactiveOpacity: DEFAULT_SETTINGS.transcriptInactiveOpacity,
+    transcriptWithdrawnEnabled: DEFAULT_SETTINGS.transcriptWithdrawnEnabled,
+    transcriptWithdrawnColor: DEFAULT_SETTINGS.transcriptWithdrawnColor,
+    transcriptWithdrawnOpacity: DEFAULT_SETTINGS.transcriptWithdrawnOpacity,
+    transcriptCancelledEnabled: DEFAULT_SETTINGS.transcriptCancelledEnabled,
+    transcriptCancelledColor: DEFAULT_SETTINGS.transcriptCancelledColor,
+    transcriptCancelledOpacity: DEFAULT_SETTINGS.transcriptCancelledOpacity,
+    transcriptDeniedEnabled: DEFAULT_SETTINGS.transcriptDeniedEnabled,
+    transcriptDeniedColor: DEFAULT_SETTINGS.transcriptDeniedColor,
+    transcriptDeniedOpacity: DEFAULT_SETTINGS.transcriptDeniedOpacity
+  };
+  
+  await chrome.storage.sync.set(defaults);
+  
+  // Reload settings and update UI
+  const settings = await chrome.storage.sync.get(null);
+  loadTranscriptStatusSettings(settings);
+  await notifyContentScript('transcriptSettingsChanged', {});
+  showStatus('Transcript status settings reset to defaults', false);
+}
+
+/**
+ * Reset assignment status settings to defaults
+ */
+async function resetAssignmentStatusSettings() {
+  const defaults = {
+    assignmentActiveEnabled: DEFAULT_SETTINGS.assignmentActiveEnabled,
+    assignmentActiveColor: DEFAULT_SETTINGS.assignmentActiveColor,
+    assignmentActiveOpacity: DEFAULT_SETTINGS.assignmentActiveOpacity,
+    assignmentQueuedEnabled: DEFAULT_SETTINGS.assignmentQueuedEnabled,
+    assignmentQueuedColor: DEFAULT_SETTINGS.assignmentQueuedColor,
+    assignmentQueuedOpacity: DEFAULT_SETTINGS.assignmentQueuedOpacity,
+    assignmentProcessedEnabled: DEFAULT_SETTINGS.assignmentProcessedEnabled,
+    assignmentProcessedColor: DEFAULT_SETTINGS.assignmentProcessedColor,
+    assignmentProcessedOpacity: DEFAULT_SETTINGS.assignmentProcessedOpacity,
+    assignmentCancelledEnabled: DEFAULT_SETTINGS.assignmentCancelledEnabled,
+    assignmentCancelledColor: DEFAULT_SETTINGS.assignmentCancelledColor,
+    assignmentCancelledOpacity: DEFAULT_SETTINGS.assignmentCancelledOpacity,
+    assignmentInactiveEnabled: DEFAULT_SETTINGS.assignmentInactiveEnabled,
+    assignmentInactiveColor: DEFAULT_SETTINGS.assignmentInactiveColor,
+    assignmentInactiveOpacity: DEFAULT_SETTINGS.assignmentInactiveOpacity,
+    assignmentDraftsEnabled: DEFAULT_SETTINGS.assignmentDraftsEnabled,
+    assignmentDraftsColor: DEFAULT_SETTINGS.assignmentDraftsColor,
+    assignmentDraftsOpacity: DEFAULT_SETTINGS.assignmentDraftsOpacity
+  };
+  
+  await chrome.storage.sync.set(defaults);
+  
+  // Reload settings and update UI
+  const settings = await chrome.storage.sync.get(null);
+  loadAssignmentStatusSettings(settings);
+  await notifyContentScript('assignmentSettingsChanged', {});
+  showStatus('Assignment status settings reset to defaults', false);
+}
+
+/**
+ * Setup reset buttons for transcript and assignment status settings
+ */
+function setupResetButtons() {
+  const resetTranscriptBtn = document.getElementById('reset-transcript-statuses');
+  const resetAssignmentBtn = document.getElementById('reset-assignment-statuses');
+  
+  if (resetTranscriptBtn) {
+    resetTranscriptBtn.addEventListener('click', async () => {
+      await resetTranscriptStatusSettings();
+    });
+  }
+  
+  if (resetAssignmentBtn) {
+    resetAssignmentBtn.addEventListener('click', async () => {
+      await resetAssignmentStatusSettings();
+    });
+  }
 }
 
 /**
@@ -3404,6 +4312,7 @@ function setupSettingsManagement() {
         'proxyDefaultText',
         'proxyAutoClickLogin',
         'customPagePreviewLink',
+        'customPageCopyLink',
         'highlightAssignmentStatuses'
       ];
 
@@ -3455,13 +4364,17 @@ function setupSettingsManagement() {
     if (!confirmed) return;
 
     try {
+      // Get current customHeaderLinks array to preserve it (or reset to empty array)
+      const currentCustomLinks = await chrome.storage.sync.get(['customHeaderLinks']);
+      
       // Reset all settings to defaults
       await chrome.storage.sync.set(DEFAULT_SETTINGS);
-
-      // Also ensure customHeaderLinksEnabled is set to false if customHeaderLinks is false
-      if (!DEFAULT_SETTINGS.customHeaderLinks) {
-        await chrome.storage.sync.set({ customHeaderLinksEnabled: false });
-      }
+      
+      // Reset customHeaderLinks to empty array (preserve structure, clear data)
+      await chrome.storage.sync.set({ customHeaderLinks: [] });
+      
+      // Also ensure customHeaderLinksEnabled is set to false
+      await chrome.storage.sync.set({ customHeaderLinksEnabled: false });
       
       // Reset user dropdown defaults to first option in each dropdown
       // Get first option values from the dropdowns
@@ -3599,6 +4512,13 @@ function setupSettingsManagement() {
             });
           }
         }
+        
+        // Also notify about customHeaderLinks reset
+        await chrome.tabs.sendMessage(tab.id, {
+          type: 'CUSTOM_LINKS_UPDATED'
+        }).catch(err => {
+          console.log('Content script not ready:', err);
+        });
       }
 
       showStatus('All features and settings have been reset to defaults.', false);

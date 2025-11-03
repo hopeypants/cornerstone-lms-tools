@@ -20,11 +20,13 @@ Get up and running with Cornerstone LMS Admin Tools in 5 minutes!
 3. **Enable** the features you want:
    - ✅ Header Logout Link
    - ✅ Custom Header Links
+   - ✅ Highlight Environments (Production/Staging/Pilot)
    - ✅ Format Session Dates
    - ✅ Sessions Checkbox Defaults
    - ✅ User Dropdown Defaults
    - ✅ Highlight Transcript Statuses
    - ✅ Highlight Assignment Statuses
+   - ✅ Custom Page Preview & Copy Links
 4. **Configure** your preferences in the popup
 5. **Start using** the enhanced CSOD experience!
 

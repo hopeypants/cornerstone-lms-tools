@@ -7,11 +7,18 @@
     <link rel="stylesheet" href="popup.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/3.2.1/css/font-awesome.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
   </head>
-<body>
+<body class="dark-mode">
   <div class="container">
     <header>
-      <h1>Cornerstone LMS Admin Tools</h1>
-      <p class="subtitle">Enhance your admin experience</p>
+      <div class="header-content">
+        <div>
+          <h1>Cornerstone LMS Admin Tools</h1>
+          <p class="subtitle">Enhance your admin experience</p>
+        </div>
+        <button id="theme-toggle" class="theme-toggle" title="Toggle dark/light mode">
+          <span id="theme-icon">☀️</span>
+        </button>
+      </div>
     </header>
 
     <!-- Tab Navigation -->
@@ -66,6 +73,7 @@
             <div class="custom-links-controls">
               <button id="add-custom-link" class="btn btn-primary">Add New Link</button>
               <button id="add-separator" class="btn btn-secondary">Add Separator</button>
+              <button id="add-transcript-links" class="btn btn-secondary" title="Add default Transcript links (All, Active, Completed, Archived)">Add Transcript Links</button>
               <button id="remove-all-links" class="btn btn-danger">Remove All</button>
             </div>
             
@@ -75,7 +83,7 @@
               <div style="display: flex; align-items: center; gap: 12px;">
                 <input type="range" id="custom-link-icon-size" min="16" max="48" value="20" step="1" style="flex: 1;">
                 <span id="custom-link-icon-size-value" style="min-width: 40px; text-align: center; font-weight: 500; color: #374151;">20px</span>
-                <button id="reset-custom-link-icon-size" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;">Reset</button>
+                <button id="reset-custom-link-icon-size" class="reset-button inline">Reset</button>
               </div>
             </div>
 
@@ -85,7 +93,7 @@
               <div style="display: flex; align-items: center; gap: 12px;">
                 <input type="range" id="header-padding" min="4" max="32" value="16" step="2" style="flex: 1;">
                 <span id="header-padding-value" style="min-width: 40px; text-align: center; font-weight: 500; color: #374151;">16px</span>
-                <button id="reset-header-padding" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;">Reset</button>
+                <button id="reset-header-padding" class="reset-button inline">Reset</button>
               </div>
             </div>
             
@@ -124,7 +132,7 @@
               <div style="display: flex; align-items: center; gap: 12px;">
                 <input type="range" id="ai-icon-size" min="16" max="48" value="32" step="2" style="flex: 1;">
                 <span id="ai-icon-size-value" style="min-width: 40px; text-align: center; font-weight: 500; color: #374151;">32px</span>
-                <button id="reset-ai-icon-size" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;">Reset</button>
+                <button id="reset-ai-icon-size" class="reset-button inline">Reset</button>
               </div>
             </div>
 
@@ -145,7 +153,7 @@
               <div style="display: flex; align-items: center; gap: 12px;">
                 <input type="range" id="pinned-links-icon-size" min="16" max="48" value="22" step="2" style="flex: 1;">
                 <span id="pinned-links-icon-size-value" style="min-width: 40px; text-align: center; font-weight: 500; color: #374151;">22px</span>
-                <button id="reset-pinned-links-icon-size" class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;">Reset</button>
+                <button id="reset-pinned-links-icon-size" class="reset-button inline">Reset</button>
               </div>
             </div>
           </div>
@@ -767,7 +775,7 @@
                   <span id="transcript-registered-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
                 </div>
               </div>
-              
+
               <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                   <label style="font-weight: 600; display: block;">In Progress</label>
@@ -780,6 +788,21 @@
                   <input type="color" id="transcript-in-progress-color" data-status="in-progress" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
                   <input type="range" id="transcript-in-progress-opacity" data-status="in-progress" min="0" max="100" value="10" style="flex: 1;">
                   <span id="transcript-in-progress-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
+                </div>
+              </div>
+
+              <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <label style="font-weight: 600; display: block;">Completed</label>
+                  <label class="toggle-switch" style="margin: 0;">
+                    <input type="checkbox" id="transcript-completed-enabled" data-status="completed">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input type="color" id="transcript-completed-color" data-status="completed" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                  <input type="range" id="transcript-completed-opacity" data-status="completed" min="0" max="100" value="10" style="flex: 1;">
+                  <span id="transcript-completed-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
                 </div>
               </div>
               
@@ -857,6 +880,25 @@
                   <span id="transcript-cancelled-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
                 </div>
               </div>
+
+              <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <label style="font-weight: 600; display: block;">Denied</label>
+                  <label class="toggle-switch" style="margin: 0;">
+                    <input type="checkbox" id="transcript-denied-enabled" data-status="denied">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input type="color" id="transcript-denied-color" data-status="denied" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                  <input type="range" id="transcript-denied-opacity" data-status="denied" min="0" max="100" value="10" style="flex: 1;">
+                  <span id="transcript-denied-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
+                </div>
+              </div>
+              
+              <button id="reset-transcript-statuses" class="reset-button" style="margin-top: 12px;">
+                Reset to Defaults
+              </button>
             </div>
           </div>
         </section>
@@ -886,16 +928,16 @@
             <div id="assignment-status-settings" style="display: none; margin-top: 16px;">
               <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                  <label style="font-weight: 600; display: block;">Processed</label>
+                  <label style="font-weight: 600; display: block;">Active</label>
                   <label class="toggle-switch" style="margin: 0;">
-                    <input type="checkbox" id="assignment-processed-enabled" data-status="processed">
+                    <input type="checkbox" id="assignment-active-enabled" data-status="active">
                     <span class="slider"></span>
                   </label>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                  <input type="color" id="assignment-processed-color" data-status="processed" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
-                  <input type="range" id="assignment-processed-opacity" data-status="processed" min="0" max="100" value="10" style="flex: 1;">
-                  <span id="assignment-processed-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
+                  <input type="color" id="assignment-active-color" data-status="active" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                  <input type="range" id="assignment-active-opacity" data-status="active" min="0" max="100" value="10" style="flex: 1;">
+                  <span id="assignment-active-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
                 </div>
               </div>
 
@@ -916,6 +958,21 @@
 
               <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <label style="font-weight: 600; display: block;">Processed</label>
+                  <label class="toggle-switch" style="margin: 0;">
+                    <input type="checkbox" id="assignment-processed-enabled" data-status="processed">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input type="color" id="assignment-processed-color" data-status="processed" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                  <input type="range" id="assignment-processed-opacity" data-status="processed" min="0" max="100" value="10" style="flex: 1;">
+                  <span id="assignment-processed-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
+                </div>
+              </div>
+
+              <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                   <label style="font-weight: 600; display: block;">Cancelled</label>
                   <label class="toggle-switch" style="margin: 0;">
                     <input type="checkbox" id="assignment-cancelled-enabled" data-status="cancelled">
@@ -926,21 +983,6 @@
                   <input type="color" id="assignment-cancelled-color" data-status="cancelled" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
                   <input type="range" id="assignment-cancelled-opacity" data-status="cancelled" min="0" max="100" value="10" style="flex: 1;">
                   <span id="assignment-cancelled-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
-                </div>
-              </div>
-
-              <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                  <label style="font-weight: 600; display: block;">Active</label>
-                  <label class="toggle-switch" style="margin: 0;">
-                    <input type="checkbox" id="assignment-active-enabled" data-status="active">
-                    <span class="slider"></span>
-                  </label>
-                </div>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                  <input type="color" id="assignment-active-color" data-status="active" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
-                  <input type="range" id="assignment-active-opacity" data-status="active" min="0" max="100" value="10" style="flex: 1;">
-                  <span id="assignment-active-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
                 </div>
               </div>
 
@@ -973,6 +1015,10 @@
                   <span id="assignment-drafts-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">10%</span>
                 </div>
               </div>
+              
+              <button id="reset-assignment-statuses" class="reset-button" style="margin-top: 12px;">
+                Reset to Defaults
+              </button>
             </div>
           </div>
         </section>
@@ -992,6 +1038,36 @@
                 <input type="checkbox" id="custom-page-preview-link" data-feature="customPagePreviewLink">
                 <span class="slider"></span>
               </label>
+            </div>
+
+            <div class="toggle-item">
+              <div class="toggle-info">
+                <label for="custom-page-copy-link">Custom Page Copy Link</label>
+                <p class="toggle-description">Adds a button beside each Custom Page ID to copy the URL to clipboard.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="custom-page-copy-link" data-feature="customPageCopyLink">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="toggle-item">
+              <div class="toggle-info">
+                <label for="resize-custom-pages-container">Resize Custom Pages Container</label>
+                <p class="toggle-description">Allows you to change the width of the Custom Pages form container (55vw to 95vw).</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="resize-custom-pages-container" data-feature="resizeCustomPagesContainer">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="form-group" id="resize-custom-pages-container-config" style="margin-top: 8px; display: none;">
+              <label class="form-label" for="custom-pages-container-width">Container Width</label>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="range" id="custom-pages-container-width" min="55" max="95" step="5" value="55" style="flex: 1;">
+                <span id="custom-pages-container-width-value" style="min-width: 50px; text-align: right; font-size: 12px;">55vw</span>
+              </div>
             </div>
           </div>
         </section>
@@ -1028,6 +1104,204 @@
                 <input type="checkbox" id="proxy-auto-click-login" data-feature="proxyAutoClickLogin" disabled>
                 <span class="slider"></span>
               </label>
+            </div>
+          </div>
+        </section>
+
+        <section class="category">
+          <h2 class="category-title">
+            <span class="category-icon">🌐</span>
+            Highlight Environments
+          </h2>
+          <div class="category-content">
+            <div class="toggle-item">
+              <div class="toggle-info">
+                <label for="highlight-environments">Highlight Environments</label>
+                <p class="toggle-description">Color-code the header based on the current environment (Production, Staging, Pilot).</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="highlight-environments" data-feature="highlightEnvironments">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div id="environment-settings" style="margin-top: 16px; display: none;">
+              <!-- Production -->
+              <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0;">
+                  <label style="font-weight: 600; display: block; cursor: pointer;" for="environment-production-expand">Production</label>
+                  <label class="toggle-switch" style="margin: 0;">
+                    <input type="checkbox" id="environment-production-expand" data-environment="production" data-type="expand">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div id="environment-production-settings" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                  <!-- Header Color Toggle -->
+                  <div style="margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                      <label class="toggle-switch" style="margin: 0;">
+                        <input type="checkbox" id="environment-production-header-color-enabled" data-environment="production" data-type="header-color">
+                        <span class="slider"></span>
+                      </label>
+                      <label for="environment-production-header-color-enabled" style="font-size: 13px; color: var(--text-secondary); cursor: pointer;">Header Color</label>
+                    </div>
+                    <div id="environment-production-header-color-options" style="display: none; margin-left: 28px; padding-top: 8px;">
+                      <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                        <label style="font-size: 12px; color: var(--text-secondary); min-width: 60px;">Color:</label>
+                        <input type="color" id="environment-production-color" data-environment="production" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                      </div>
+                      <div style="display: flex; gap: 8px; align-items: center;">
+                        <label style="font-size: 12px; color: var(--text-secondary); min-width: 60px;">Opacity:</label>
+                        <input type="range" id="environment-production-header-opacity" data-environment="production" min="0" max="100" value="100" style="flex: 1;">
+                        <span id="environment-production-header-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">100%</span>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Watermark Toggle -->
+                  <div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                      <label class="toggle-switch" style="margin: 0;">
+                        <input type="checkbox" id="environment-production-watermark" data-environment="production" data-type="watermark">
+                        <span class="slider"></span>
+                      </label>
+                      <label for="environment-production-watermark" style="font-size: 13px; color: var(--text-secondary); cursor: pointer;">Show Watermark</label>
+                    </div>
+                    <div id="environment-production-watermark-options" style="display: none; margin-left: 28px; padding-top: 8px;">
+                      <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                        <label style="font-size: 12px; color: var(--text-secondary); min-width: 60px;">Color:</label>
+                        <input type="color" id="environment-production-watermark-color" data-environment="production" value="#000000" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                      </div>
+                      <div style="display: flex; gap: 8px; align-items: center;">
+                        <label style="font-size: 12px; color: var(--text-secondary); min-width: 60px;">Opacity:</label>
+                        <input type="range" id="environment-production-watermark-opacity" data-environment="production" min="0" max="100" value="50" style="flex: 1;">
+                        <span id="environment-production-watermark-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">50%</span>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Reset Button -->
+                  <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                    <button type="button" id="reset-environment-production" class="reset-button">Reset to Defaults</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Staging -->
+              <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0;">
+                  <label style="font-weight: 600; display: block; cursor: pointer;" for="environment-staging-expand">Staging</label>
+                  <label class="toggle-switch" style="margin: 0;">
+                    <input type="checkbox" id="environment-staging-expand" data-environment="staging" data-type="expand">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div id="environment-staging-settings" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                  <!-- Header Color Toggle -->
+                  <div style="margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                      <label class="toggle-switch" style="margin: 0;">
+                        <input type="checkbox" id="environment-staging-header-color-enabled" data-environment="staging" data-type="header-color">
+                        <span class="slider"></span>
+                      </label>
+                      <label for="environment-staging-header-color-enabled" style="font-size: 13px; color: var(--text-secondary); cursor: pointer;">Header Color</label>
+                    </div>
+                    <div id="environment-staging-header-color-options" style="display: none; margin-left: 28px; padding-top: 8px;">
+                      <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                        <label style="font-size: 12px; color: var(--text-secondary); min-width: 60px;">Color:</label>
+                        <input type="color" id="environment-staging-color" data-environment="staging" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                      </div>
+                      <div style="display: flex; gap: 8px; align-items: center;">
+                        <label style="font-size: 12px; color: var(--text-secondary); min-width: 60px;">Opacity:</label>
+                        <input type="range" id="environment-staging-header-opacity" data-environment="staging" min="0" max="100" value="100" style="flex: 1;">
+                        <span id="environment-staging-header-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">100%</span>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Watermark Toggle -->
+                  <div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                      <label class="toggle-switch" style="margin: 0;">
+                        <input type="checkbox" id="environment-staging-watermark" data-environment="staging" data-type="watermark">
+                        <span class="slider"></span>
+                      </label>
+                      <label for="environment-staging-watermark" style="font-size: 13px; color: var(--text-secondary); cursor: pointer;">Show Watermark</label>
+                    </div>
+                    <div id="environment-staging-watermark-options" style="display: none; margin-left: 28px; padding-top: 8px;">
+                      <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                        <label style="font-size: 12px; color: var(--text-secondary); min-width: 60px;">Color:</label>
+                        <input type="color" id="environment-staging-watermark-color" data-environment="staging" value="#000000" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                      </div>
+                      <div style="display: flex; gap: 8px; align-items: center;">
+                        <label style="font-size: 12px; color: var(--text-secondary); min-width: 60px;">Opacity:</label>
+                        <input type="range" id="environment-staging-watermark-opacity" data-environment="staging" min="0" max="100" value="50" style="flex: 1;">
+                        <span id="environment-staging-watermark-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">50%</span>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Reset Button -->
+                  <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                    <button type="button" id="reset-environment-staging" class="reset-button">Reset to Defaults</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pilot -->
+              <div class="status-setting" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0;">
+                  <label style="font-weight: 600; display: block; cursor: pointer;" for="environment-pilot-expand">Pilot</label>
+                  <label class="toggle-switch" style="margin: 0;">
+                    <input type="checkbox" id="environment-pilot-expand" data-environment="pilot" data-type="expand">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div id="environment-pilot-settings" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                  <!-- Header Color Toggle -->
+                  <div style="margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                      <label class="toggle-switch" style="margin: 0;">
+                        <input type="checkbox" id="environment-pilot-header-color-enabled" data-environment="pilot" data-type="header-color">
+                        <span class="slider"></span>
+                      </label>
+                      <label for="environment-pilot-header-color-enabled" style="font-size: 13px; color: var(--text-secondary); cursor: pointer;">Header Color</label>
+                    </div>
+                    <div id="environment-pilot-header-color-options" style="display: none; margin-left: 28px; padding-top: 8px;">
+                      <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                        <label style="font-size: 12px; color: var(--text-secondary); min-width: 60px;">Color:</label>
+                        <input type="color" id="environment-pilot-color" data-environment="pilot" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                      </div>
+                      <div style="display: flex; gap: 8px; align-items: center;">
+                        <label style="font-size: 12px; color: var(--text-secondary); min-width: 60px;">Opacity:</label>
+                        <input type="range" id="environment-pilot-header-opacity" data-environment="pilot" min="0" max="100" value="100" style="flex: 1;">
+                        <span id="environment-pilot-header-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">100%</span>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Watermark Toggle -->
+                  <div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                      <label class="toggle-switch" style="margin: 0;">
+                        <input type="checkbox" id="environment-pilot-watermark" data-environment="pilot" data-type="watermark">
+                        <span class="slider"></span>
+                      </label>
+                      <label for="environment-pilot-watermark" style="font-size: 13px; color: var(--text-secondary); cursor: pointer;">Show Watermark</label>
+                    </div>
+                    <div id="environment-pilot-watermark-options" style="display: none; margin-left: 28px; padding-top: 8px;">
+                      <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                        <label style="font-size: 12px; color: var(--text-secondary); min-width: 60px;">Color:</label>
+                        <input type="color" id="environment-pilot-watermark-color" data-environment="pilot" value="#000000" style="width: 50px; height: 32px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+                      </div>
+                      <div style="display: flex; gap: 8px; align-items: center;">
+                        <label style="font-size: 12px; color: var(--text-secondary); min-width: 60px;">Opacity:</label>
+                        <input type="range" id="environment-pilot-watermark-opacity" data-environment="pilot" min="0" max="100" value="50" style="flex: 1;">
+                        <span id="environment-pilot-watermark-opacity-value" style="min-width: 40px; text-align: right; font-size: 12px;">50%</span>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Reset Button -->
+                  <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                    <button type="button" id="reset-environment-pilot" class="reset-button">Reset to Defaults</button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>

@@ -69,23 +69,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Highlight Transcript Statuses**: Color-code transcript statuses for quick visual identification
   - Statuses: Past Due, In Progress, Pending, Registered, Inactive, Withdrawn, Cancelled
   - Customizable colors and opacity for each status
+  - Reset to defaults button
   - Only runs on pages with "UniversalProfile/Transcript" in the URL
   - Highlights list items and status lines with different opacities
 
 #### Learning Assignment Tool
 - **Highlight Assignment Statuses**: Color-code assignment statuses for quick visual identification
-  - Statuses: Processed (default: blue), Queued (default: orange), Cancelled (default: black), Active (default: green), Inactive (default: gray), Drafts (partial match, default: gray)
+  - Statuses: Active (default: #0066cc/blue), Queued (default: orange), Processed (default: #00aa00/green), Cancelled, Inactive, Drafts
   - Customizable colors and opacity for each status
+  - Reset to defaults button
   - Only runs on pages with "EnrollTraining/EnrollTrainingManagement" in the URL
   - Highlights list items based on status text
 
 #### Misc Tools
+- **Highlight Environments**: Color-code the header based on the current environment
+  - Production, Staging, and Pilot environment detection from URL patterns
+  - Customizable header background colors for each environment (default: Production #950606, Staging #06402B, Pilot #111184)
+  - Optional watermark text overlay ("Production", "Staging", or "Pilot") with customizable color and opacity
+  - Header color and watermark can be toggled independently for each environment
+  - Expandable/collapsible settings for each environment
+  - Reset to defaults button for each environment (restores colors and values, preserves toggle states)
+  - Automatically detects environment from URL:
+    - Staging: `*-stg.csod.com`
+    - Pilot: `*-pilot.csod.com`
+    - Production: Any other `*.csod.com` domain
 - **Proxy As Another User**: Set default comment text for proxy sessions
   - Auto-click Log In button option (only enabled when default text is set and Proxy feature is on)
   - Only runs on pages with "Admin/ProxyAsUser" in the URL
-- **Custom Page Preview Link**: Adds "Open" buttons to URLs in the Custom Pages table
-  - Works with AJAX pagination
-  - Buttons placed in Options column with proper spacing
+- **Custom Pages Tools**:
+  - **Custom Page Preview Link**: Adds "Open" buttons next to Custom Page IDs to open URLs in a new tab
+    - Buttons appear on hover over table rows
+    - Positioned to the right of the Custom Page ID span
+    - Works with AJAX pagination
+    - Sets span width to 74px when enabled
+  - **Custom Page Copy Link**: Adds "Copy" buttons next to Custom Page IDs to copy URLs to clipboard
+    - Buttons appear on hover over table rows
+    - Positioned to the right of the Open button (if present)
+    - Shows Bootstrap-style green success alert at top of page when copied
+    - Works with AJAX pagination
+    - Sets span width to 74px when either preview or copy feature is enabled
+  - **Resize Custom Pages Container**: Adjust the width of the Custom Pages form container
+    - Adjustable width from 55vw to 95vw in 5vw increments
+    - Applies `margin: auto` to the form when enabled
+    - Applies `margin: auto 8px` to body on Custom Pages URL (always, regardless of toggle state)
+    - Only applies to the first `<form>` element directly after `<body>`
+    - Only applies to `admin/ManageCustomPages` URL
 - **Settings Management**:
   - **Export Settings**: Download all settings as a JSON file with timestamp (YYYY-MM-DD-HH-MM-SS format)
   - **Import Settings**: Restore settings from a previously exported file
@@ -105,8 +133,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Buy Me a Coffee Link**: Added support link in footer with icon
 - **Footer Layout**: Centered version number with links on either side
 - **Custom Dialogs**: Replaced all native alert/confirm dialogs with custom styled modals
+- **Custom Alert Messages**: Replaced native browser alerts with Bootstrap-style green alerts at top of page
+- **Standardized Reset Buttons**: All reset buttons now use consistent styling with light/dark mode support
+  - Unified `.reset-button` class with CSS variables
+  - Inline variant for smaller buttons next to sliders
+  - Hover and active states
 - **Enhanced Error Handling**: Better validation and error messages throughout
 - **Auto-enable Features**: Features automatically enable when relevant data is added
+- **Expandable Environment Settings**: Each environment (Production, Staging, Pilot) has expandable/collapsible settings
 
 ### Technical Features
 - **Manifest V3 Support**: Modern Chrome extension architecture

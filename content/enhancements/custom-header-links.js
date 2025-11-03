@@ -26,21 +26,28 @@ class CustomHeaderLinksEnhancement {
       // Load custom links from storage
       await this.loadCustomLinks();
       
-      // Wait for header to be available
+      // Only proceed if we have links to render or the feature is enabled
+      // Even if links array is empty, we still want to apply icon sizes to default icons
       const header = await this.waitForElement('header.c-page-header', 5000);
       
-      // Render all custom links directly to header
-      this.renderCustomLinks();
+      // Render all custom links directly to header (only if we have links)
+      if (this.customLinks.length > 0) {
+        this.renderCustomLinks();
+      }
       
-      // Apply icon size to all icons (including default CSOD icons)
+      // Apply icon size to all icons (including default CSOD icons) - always do this
       this.applyIconSizeToAll();
       
-      // Setup MutationObserver to keep custom links at the start
-      this.setupHeaderItemsObserver();
+      // Setup MutationObserver to keep custom links at the start (only if we have links)
+      if (this.customLinks.length > 0) {
+        this.setupHeaderItemsObserver();
+      }
       
       console.log(`${this.name}: Custom links initialized with ${this.customLinks.length} links`);
     } catch (error) {
-      console.warn(`${this.name}: Could not find header element`, error);
+      // If header not found, don't throw - just log and continue with listeners
+      // This allows icon size changes to still work even if header isn't ready
+      console.warn(`${this.name}: Could not find header element within timeout - will retry on page navigation or when header appears`, error);
     }
     
     // Listen for icon size changes
@@ -303,11 +310,17 @@ class CustomHeaderLinksEnhancement {
       const result = await chrome.storage.sync.get(['customHeaderLinks']);
       let customLinks = result.customHeaderLinks;
       
-      // Ensure customLinks is always an array - but preserve existing data
+      // Ensure customLinks is always an array - fix if it's false or invalid
       if (!Array.isArray(customLinks)) {
-        console.warn(`${this.name}: customLinks is not an array, initializing as empty array but NOT saving:`, customLinks);
+        console.warn(`${this.name}: customLinks is not an array (value: ${customLinks}), resetting to empty array and saving`, customLinks);
         customLinks = [];
-        // DO NOT save empty array - it might wipe out data during toggle operations
+        // Save the corrected value to fix the storage
+        try {
+          await chrome.storage.sync.set({ customHeaderLinks: [] });
+          console.log(`${this.name}: Fixed customHeaderLinks in storage (set to empty array)`);
+        } catch (error) {
+          console.error(`${this.name}: Error fixing customHeaderLinks in storage:`, error);
+        }
       }
       
       this.customLinks = customLinks;
@@ -537,12 +550,18 @@ class CustomHeaderLinksEnhancement {
       const insertionPoint = this.findInsertionPoint(header);
       
       // Render each custom link directly to the header, inserting at the start
-      this.customLinks.forEach((link, index) => {
-        const linkElement = this.createLinkElement(link, index);
+      // Iterate in reverse order so that when we insert before the same reference point,
+      // items at the beginning of the array (top of list) end up leftmost
+      let currentInsertionPoint = insertionPoint;
+      for (let i = this.customLinks.length - 1; i >= 0; i--) {
+        const link = this.customLinks[i];
+        const linkElement = this.createLinkElement(link, i);
         
-        if (insertionPoint) {
-          // Insert before the first non-custom header item
-          insertionPoint.parentNode.insertBefore(linkElement, insertionPoint);
+        if (currentInsertionPoint) {
+          // Insert before the insertion point (or previously inserted element)
+          currentInsertionPoint.parentNode.insertBefore(linkElement, currentInsertionPoint);
+          // Update insertion point to the newly inserted element for next iteration
+          currentInsertionPoint = linkElement;
         } else {
           // No existing header items - insert at the very start
           if (header.firstChild) {
@@ -550,10 +569,15 @@ class CustomHeaderLinksEnhancement {
           } else {
             header.appendChild(linkElement);
           }
+          // Update insertion point for subsequent iterations
+          currentInsertionPoint = linkElement;
         }
         
         this.elements.push(linkElement);
-      });
+      }
+      
+      // Reverse this.elements to match the order in customLinks array
+      this.elements.reverse();
       
       console.log(`${this.name}: Rendered ${this.elements.length} custom links`);
     } finally {
@@ -622,6 +646,12 @@ class CustomHeaderLinksEnhancement {
     
     // Apply icon size if setting exists
     this.applyIconSize(iconElement);
+    
+    // Apply icon color if specified
+    if (link.iconColor && link.iconColor !== '#ffffff') {
+      iconElement.style.color = link.iconColor;
+      iconElement.style.setProperty('color', link.iconColor, 'important');
+    }
 
     linkElement.appendChild(iconElement);
     wrapperDiv.appendChild(linkElement);

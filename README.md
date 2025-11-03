@@ -46,20 +46,43 @@ A Chrome extension that enhances the Cornerstone LMS (CSOD) admin experience wit
 - **Highlight Transcript Statuses**: Color-code transcript statuses for quick visual identification
   - Statuses: Past Due, In Progress, Pending, Registered, Inactive, Withdrawn, Cancelled
   - Customizable colors and opacity for each status
+  - Reset to defaults button
   - Only runs on pages with "UniversalProfile/Transcript" in the URL
 
 ### Learning Assignment Tool
 - **Highlight Assignment Statuses**: Color-code assignment statuses for quick visual identification
-  - Statuses: Processed, Queued, Cancelled, Active, Inactive, Drafts (partial match)
+  - Statuses: Active (default: blue), Queued (default: orange), Processed (default: green), Cancelled, Inactive, Drafts
   - Customizable colors and opacity for each status
+  - Reset to defaults button
   - Only runs on pages with "EnrollTraining/EnrollTrainingManagement" in the URL
 
 ### Misc Tools
+- **Highlight Environments**: Color-code the header based on the current environment
+  - Production, Staging, and Pilot environment detection
+  - Customizable header background colors for each environment
+  - Optional watermark text overlay ("Production", "Staging", or "Pilot")
+  - Watermark with customizable color and opacity
+  - Header color and watermark can be toggled independently
+  - Reset to defaults for each environment
+  - Automatically detects environment from URL pattern:
+    - Staging: `*-stg.csod.com`
+    - Pilot: `*-pilot.csod.com`
+    - Production: Any other `*.csod.com` domain
 - **Proxy As Another User**: Set default comment text for proxy sessions
   - Auto-click Log In button option (requires default text to be set)
   - Only runs on pages with "Admin/ProxyAsUser" in the URL
-- **Custom Page Preview Link**: Adds "Open" buttons to URLs in the Custom Pages table
-  - Works with AJAX pagination
+- **Custom Pages Tools**:
+  - **Custom Page Preview Link**: Adds "Open" buttons next to Custom Page IDs to open URLs in a new tab
+    - Buttons appear on hover over table rows
+    - Works with AJAX pagination
+  - **Custom Page Copy Link**: Adds "Copy" buttons next to Custom Page IDs to copy URLs to clipboard
+    - Buttons appear on hover over table rows
+    - Shows Bootstrap-style success alert when copied
+    - Works with AJAX pagination
+  - **Resize Custom Pages Container**: Adjust the width of the Custom Pages form container
+    - Adjustable width from 55vw to 95vw in 5vw increments
+    - Applies consistent body margins
+    - Only applies to `admin/ManageCustomPages` URL
 - **Settings Management**:
   - Export Settings: Download all settings as a JSON file with timestamp
   - Import Settings: Restore settings from a previously exported file
@@ -125,6 +148,9 @@ cornerstone-lms-tools/
 │       ├── resize-pinned-links-icon.js
 │       ├── proxy-as-user.js
 │       ├── custom-page-preview-link.js
+│       ├── custom-page-copy-link.js
+│       ├── resize-custom-pages-container.js
+│       ├── highlight-environments.js
 │       ├── sessions-checkbox-defaults.js
 │       ├── format-session-dates.js
 │       ├── highlight-transcript-statuses.js
@@ -158,7 +184,7 @@ The extension provides a tabbed popup interface where you can:
 - **ILT Tab**: Configure Instructor-Led Training enhancements
 - **Users Tab**: Set dropdown defaults for user management
 - **Transcript Tab**: Configure transcript status highlighting
-- **Misc Tab**: Proxy settings, custom pages, and assignment status highlighting
+- **Misc Tab**: Environment highlighting, proxy settings, custom pages tools, and assignment status highlighting
 - Export/Import settings for backup and sharing
 - Turn off or reset all features
 

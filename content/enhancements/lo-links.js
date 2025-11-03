@@ -140,22 +140,150 @@
       }
       .copied-message {
         position: fixed;
-        bottom: 20px;
-        left: 20px;
-        background: #333;
-        color: #fff;
-        padding: 5px 10px;
-        border-radius: 5px;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #d4edda;
+        color: #155724;
+        padding: 12px 20px;
+        border: 1px solid #c3e6cb;
+        border-radius: 4px;
         display: none;
         z-index: 10000;
-        font-size: 2em;
+        font-size: 14px;
+        font-weight: 500;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        min-width: 200px;
+        text-align: center;
+      }
+      #lo-preview.disabled-link a,
+      #lo-preview.disabled-link a:hover {
+        color: #999 !important;
+        cursor: not-allowed !important;
+        opacity: 0.5;
+        text-decoration: none;
+      }
+      #lo-preview.disabled-link i {
+        color: #999 !important;
+        opacity: 0.5;
+      }
+      .lo-link-copy-icon {
+        cursor: pointer;
+        opacity: 0.7;
+        transition: opacity 0.2s, color 0.2s;
+      }
+      .lo-link-copy-icon:hover {
+        opacity: 1;
+        color: #0066cc !important;
+      }
+      .lo-link-copy-icon:active {
+        color: #004499 !important;
+      }
+      #lo-preview.disabled-link .lo-link-copy-icon {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+      #lo-preview.disabled-link .lo-link-copy-icon:hover {
+        color: #666;
+        opacity: 0.3;
       }
     `;
     document.head.appendChild(style);
   }
 
+  // Get content type from page
+  function getContentType() {
+    // Look for "Content Type" label followed by its value
+    // The structure is: <span>Content Type</span><span>: </span><span>SCORM 1.2</span>
+    const spans = document.querySelectorAll('span');
+    
+    for (let i = 0; i < spans.length; i++) {
+      const span = spans[i];
+      const text = span.textContent ? span.textContent.trim() : '';
+      
+      // Look for "Content Type" text
+      if (text === 'Content Type') {
+        // Get parent container to search for the value span
+        const parent = span.parentElement;
+        if (!parent) continue;
+        
+        // Get all spans in the parent container
+        const allSpans = Array.from(parent.querySelectorAll('span'));
+        const labelIndex = allSpans.indexOf(span);
+        
+        // Look for the next span after "Content Type" that contains the actual value
+        // Skip spans that are just ": " or other separators
+        for (let j = labelIndex + 1; j < allSpans.length && j <= labelIndex + 5; j++) {
+          const valueSpan = allSpans[j];
+          const valueText = valueSpan.textContent ? valueSpan.textContent.trim() : '';
+          
+          // Skip separators and empty spans
+          if (valueText === ':' || valueText === '' || valueText.length === 0) {
+            continue;
+          }
+          
+          // If we find a non-empty span that's not just a separator, it's likely the content type
+          // Content types are usually things like "SCORM 1.2", "AICC", "Video", etc.
+          if (valueText.length > 0 && valueText.length < 100) {
+            // Additional check: make sure it's not another label
+            const lowerText = valueText.toLowerCase();
+            if (!lowerText.includes('content type') && !lowerText.includes('file name') && 
+                !lowerText.includes('publication id') && !lowerText.includes('download')) {
+              return valueText;
+            }
+          }
+        }
+        
+        // If not found in parent, check the parent's parent (sometimes the structure varies)
+        const grandParent = parent.parentElement;
+        if (grandParent) {
+          const grandParentSpans = Array.from(grandParent.querySelectorAll('span'));
+          const labelIndexInGrand = grandParentSpans.indexOf(span);
+          
+          for (let j = labelIndexInGrand + 1; j < grandParentSpans.length && j <= labelIndexInGrand + 10; j++) {
+            const valueSpan = grandParentSpans[j];
+            const valueText = valueSpan.textContent ? valueSpan.textContent.trim() : '';
+            
+            if (valueText === ':' || valueText === '' || valueText.length === 0) {
+              continue;
+            }
+            
+            if (valueText.length > 0 && valueText.length < 100) {
+              const lowerText = valueText.toLowerCase();
+              if (!lowerText.includes('content type') && !lowerText.includes('file name') && 
+                  !lowerText.includes('publication id') && !lowerText.includes('download')) {
+                return valueText;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    return null;
+  }
+
+  // Check if content type supports preview
+  function isPreviewSupported(contentType) {
+    if (!contentType) return false;
+    
+    const normalizedType = contentType.toUpperCase();
+    
+    // Check for SCORM (partial match - could be "SCORM 1.2", "SCORM 2004", etc.)
+    if (normalizedType.includes('SCORM')) {
+      return true;
+    }
+    
+    // Check for AICC (exact or partial match)
+    if (normalizedType === 'AICC' || normalizedType.includes('AICC')) {
+      return true;
+    }
+    
+    return false;
+  }
+
   // Create link HTML
-  function createLinkHTML(type, title, label) {
+  function createLinkHTML(type, title, label, disabled = false, disabledTooltip = '', loid = '') {
     // Map link types to Font Awesome v3 icon classes (CSOD format: fa-icon-*)
     const iconMap = {
       'preview': 'fa-icon-eye-open',
@@ -167,18 +295,83 @@
     // Fallback to a generic link icon if specific icon not found
     const iconClass = iconMap[type] || 'fa-icon-link';
     
+    const disabledClass = disabled ? 'disabled-link' : '';
+    const finalTitle = disabled && disabledTooltip ? disabledTooltip : title;
+    const hrefValue = disabled ? '#' : buildUrl(type, loid);
+    const targetAttr = disabled ? '' : 'target="_blank"';
+    
     return `
-      <div id="lo-${type}" class="cr-flexcol-xs-6 cr-flexcol-sm-12">
+      <div id="lo-${type}" class="cr-flexcol-xs-6 cr-flexcol-sm-12 ${disabledClass}">
         <div class="cr-flexgrid gt-medium middle-xs">
           <div class="cr-flexcol-xs-auto">
             <i class="${iconClass}" style="font-size: 1.4em; color: #999;"></i>
           </div>
           <div class="cr-flexcol-xs-fill">
-            <a id="${type}-link" class="cso-hyper-link cso-text-medium cso-text-bold" title="${title}" target="_blank">${label}</a>
+            <a id="${type}-link" class="cso-hyper-link cso-text-medium cso-text-bold" title="${finalTitle}" href="${hrefValue}" ${targetAttr}>${label}</a>
+          </div>
+          <div class="cr-flexcol-xs-auto">
+            <i class="fa-icon-copy lo-link-copy-icon" id="${type}-copy-icon" title="Copy ${label} link" aria-label="Copy ${label} link" style="font-size: 1.4em; color: #999;"></i>
           </div>
         </div>
       </div>
     `;
+  }
+
+  // Show copied message (Bootstrap-style alert at top)
+  function showCopiedMessage() {
+    let copiedMessage = document.querySelector('.copied-message');
+    if (!copiedMessage) {
+      copiedMessage = document.createElement('div');
+      copiedMessage.className = 'copied-message';
+      copiedMessage.textContent = 'Copied!';
+      document.body.appendChild(copiedMessage);
+    }
+    
+    copiedMessage.style.display = 'block';
+    copiedMessage.style.opacity = '1';
+    copiedMessage.style.transform = 'translateX(-50%)';
+    
+    // Auto-dismiss after 3 seconds
+    setTimeout(() => {
+      copiedMessage.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+      copiedMessage.style.opacity = '0';
+      copiedMessage.style.transform = 'translateX(-50%) translateY(-10px)';
+      setTimeout(() => {
+        copiedMessage.style.display = 'none';
+        copiedMessage.style.transform = 'translateX(-50%)';
+      }, 300);
+    }, 3000);
+  }
+
+  // Copy URL to clipboard
+  async function copyUrlToClipboard(url) {
+    try {
+      // Use modern Clipboard API if available
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url);
+        showCopiedMessage();
+      } else {
+        // Fallback to execCommand
+        const textArea = document.createElement('textarea');
+        textArea.value = url;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        
+        try {
+          document.execCommand('copy');
+          showCopiedMessage();
+        } catch (err) {
+          console.error('Failed to copy URL:', err);
+        }
+        
+        document.body.removeChild(textArea);
+      }
+    } catch (err) {
+      console.error('Error copying URL:', err);
+    }
   }
 
   // Build URL for link type
@@ -223,23 +416,76 @@
       }
     });
 
+    // Get content type and check if preview is supported
+    const contentType = getContentType();
+    console.log('LO Links: Content type detected:', contentType);
+    const previewSupported = isPreviewSupported(contentType);
+    console.log('LO Links: Preview supported:', previewSupported);
+
     // Create and inject link elements
     const linkTypes = [
-      { type: 'preview', title: 'LO preview', label: 'Preview' },
-      { type: 'details', title: 'LO details', label: 'Details' },
-      { type: 'launch', title: 'Launch', label: 'Launch' },
-      { type: 'register', title: 'Register & launch', label: 'Register & Launch' }
+      { 
+        type: 'preview', 
+        title: previewSupported 
+          ? 'Launches the course preview mode. The course will not be added to the user\'s Transcript when launched this way.'
+          : 'Preview is only available for SCORM and AICC content types',
+        label: 'Preview',
+        disabled: !previewSupported,
+        disabledTooltip: 'Preview is only available for SCORM and AICC content types'
+      },
+      { 
+        type: 'details', 
+        title: 'Opens the Learning Object Details page in a new tab.',
+        label: 'Details' 
+      },
+      { 
+        type: 'launch', 
+        title: 'Launches the Learning Object if you\'re registered, or opens the Learning Details page if not yet registered.',
+        label: 'Launch' 
+      },
+      { 
+        type: 'register', 
+        title: 'Registers you for the Learning Object and launches it immediately.',
+        label: 'Register & Launch' 
+      }
     ];
 
-    linkTypes.forEach(({ type, title, label }) => {
-      const linkHTML = createLinkHTML(type, title, label);
+    linkTypes.forEach(({ type, title, label, disabled = false, disabledTooltip = '' }) => {
+      const linkHTML = createLinkHTML(type, title, label, disabled, disabledTooltip, loid);
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = linkHTML;
       const linkElement = tempDiv.firstElementChild;
       
-      // Set href
+      // For disabled preview links, prevent navigation
       const link = linkElement.querySelector('a');
-      link.href = buildUrl(type, loid);
+      if (disabled) {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        });
+        // Also set href to # as a fallback
+        link.href = '#';
+      }
+      
+      // Setup copy icon functionality
+      const copyIcon = linkElement.querySelector(`#${type}-copy-icon`);
+      if (copyIcon) {
+        const urlToCopy = disabled ? '#' : buildUrl(type, loid);
+        
+        copyIcon.addEventListener('click', async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          // Don't copy if disabled
+          if (disabled) {
+            return false;
+          }
+          
+          await copyUrlToClipboard(urlToCopy);
+          return false;
+        });
+      }
       
       // Append to container
       container.appendChild(linkElement);
@@ -326,17 +572,22 @@
       document.body.appendChild(copiedMessage);
     }
 
-    // Show copied message
+    // Show copied message (Bootstrap-style alert at top)
     function showCopiedMessage() {
       copiedMessage.style.display = 'block';
       copiedMessage.style.opacity = '1';
+      copiedMessage.style.transform = 'translateX(-50%)';
+      
+      // Auto-dismiss after 3 seconds
       setTimeout(() => {
-        copiedMessage.style.transition = 'opacity 0.2s';
+        copiedMessage.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
         copiedMessage.style.opacity = '0';
+        copiedMessage.style.transform = 'translateX(-50%) translateY(-10px)';
         setTimeout(() => {
           copiedMessage.style.display = 'none';
-        }, 200);
-      }, 1000);
+          copiedMessage.style.transform = 'translateX(-50%)';
+        }, 300);
+      }, 3000);
     }
 
     // Add click handler and cursor

@@ -121,6 +121,7 @@ const ENHANCEMENTS = {
   ...(window.ProxyAsUserEnhancement && { proxyDefaultText: window.ProxyAsUserEnhancement }),
   ...(window.ProxyAsUserEnhancement && { proxyAutoClickLogin: window.ProxyAsUserEnhancement }),
   ...(window.CustomPagePreviewLinkEnhancement && { customPagePreviewLink: window.CustomPagePreviewLinkEnhancement }),
+  ...(window.CustomPageCopyLinkEnhancement && { customPageCopyLink: window.CustomPageCopyLinkEnhancement }),
   // Only include enhancements that are loaded on this page
   ...(window.ToggleTentativeColumnEnhancement && { toggleTentativeColumn: window.ToggleTentativeColumnEnhancement }),
   ...(window.HighlightZeroSessionsEnhancement && { highlightZeroSessions: window.HighlightZeroSessionsEnhancement }),
@@ -148,6 +149,8 @@ const activeEnhancements = {};
 function updateEnhancementsRegistry() {
   Object.assign(ENHANCEMENTS, {
     customHeaderLinks: window.CustomHeaderLinksEnhancement,
+    ...(window.CustomPagePreviewLinkEnhancement && { customPagePreviewLink: window.CustomPagePreviewLinkEnhancement }),
+    ...(window.CustomPageCopyLinkEnhancement && { customPageCopyLink: window.CustomPageCopyLinkEnhancement }),
     ...(window.ToggleTentativeColumnEnhancement && { toggleTentativeColumn: window.ToggleTentativeColumnEnhancement }),
     ...(window.HighlightZeroSessionsEnhancement && { highlightZeroSessions: window.HighlightZeroSessionsEnhancement }),
     ...(window.HighlightFullSessionsEnhancement && { highlightFullSessions: window.HighlightFullSessionsEnhancement }),
@@ -225,14 +228,33 @@ async function initializeEnhancements(settings) {
     }
   }
   
-  // Special case: If customHeaderLinks isn't enabled but links exist, enable it
-  if (!settings.customHeaderLinks) {
+  // Special case: Handle customHeaderLinks initialization
+  // Check the explicit toggle state (not just settings.customHeaderLinks which might be derived)
+  const customLinksEnabledState = await chrome.storage.sync.get(['customHeaderLinksEnabled']);
+  const toggleState = customLinksEnabledState.customHeaderLinksEnabled;
+  
+  if (toggleState === false) {
+    // Explicitly disabled - make sure enhancement is not active
+    if (activeEnhancements.customHeaderLinks) {
+      console.log('Content Script: customHeaderLinks is explicitly disabled, disabling enhancement');
+      await disableEnhancement('customHeaderLinks');
+    }
+  } else if (settings.customHeaderLinks === true || toggleState === true) {
+    // Explicitly enabled - ensure it's active (this should already be handled above, but double-check)
+    if (!activeEnhancements.customHeaderLinks) {
+      const EnhancementClass = ENHANCEMENTS.customHeaderLinks;
+      if (EnhancementClass) {
+        await enableEnhancement('customHeaderLinks', EnhancementClass);
+      }
+    }
+  } else if (toggleState === undefined) {
+    // Toggle state not set - auto-enable if links exist
     const customLinksResult = await chrome.storage.sync.get(['customHeaderLinks']);
     const customLinks = customLinksResult.customHeaderLinks;
     if (Array.isArray(customLinks) && customLinks.length > 0 && !activeEnhancements.customHeaderLinks) {
       const EnhancementClass = ENHANCEMENTS.customHeaderLinks;
       if (EnhancementClass) {
-        console.log('Content Script: Auto-enabling customHeaderLinks because links exist');
+        console.log('Content Script: Auto-enabling customHeaderLinks because links exist and toggle is not set');
         await enableEnhancement('customHeaderLinks', EnhancementClass);
         await chrome.storage.sync.set({ customHeaderLinksEnabled: true });
       }
@@ -337,6 +359,12 @@ async function handleMessage(message, sender, sendResponse) {
       return;
     }
     
+    // Skip environment features - they handle their own messages via highlight-environments.js
+    if (feature === 'highlightEnvironments' || feature === 'environmentSettingsChanged' || feature.startsWith('environment')) {
+      // highlight-environments.js will handle this message directly
+      return;
+    }
+    
     // Update registry before checking for enhancement
     updateEnhancementsRegistry();
     
@@ -402,7 +430,22 @@ async function handleMessage(message, sender, sendResponse) {
       activeEnhancements.customHeaderLinks.iconSize = size;
       activeEnhancements.customHeaderLinks.applyIconSizeToAll();
     } else {
-      console.warn('Content Script: customHeaderLinks enhancement not active');
+      // Enhancement not active, but we still want to apply icon sizes to default CSOD icons
+      // Initialize a minimal instance just for icon sizing
+      const EnhancementClass = ENHANCEMENTS.customHeaderLinks;
+      if (EnhancementClass) {
+        try {
+          const enhancement = new EnhancementClass();
+          enhancement.iconSize = size;
+          // Load icon size and apply without needing custom links
+          await enhancement.loadIconSize();
+          enhancement.iconSize = size; // Override with the new size
+          enhancement.applyIconSizeToAll();
+          console.log(`Content Script: Applied icon size ${size}px without full enhancement initialization`);
+        } catch (error) {
+          console.warn('Content Script: Could not apply icon size - enhancement initialization failed:', error);
+        }
+      }
     }
   } else if (message.type === 'GET_AI_ICON_STATUS') {
     // Check if AI icon exists on the page
@@ -530,6 +573,11 @@ chrome.storage.onChanged.addListener(async (changes, areaName) => {
       // Skip transcript features - they handle their own storage changes via highlight-transcript-statuses.js
       if (feature === 'highlightTranscriptStatuses' || feature.startsWith('transcript')) {
         // highlight-transcript-statuses.js will handle this storage change directly
+        continue;
+      }
+      
+      if (feature === 'highlightEnvironments' || feature.startsWith('environment')) {
+        // highlight-environments.js will handle this storage change directly
         continue;
       }
       

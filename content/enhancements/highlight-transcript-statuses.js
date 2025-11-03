@@ -11,10 +11,12 @@
     pastDue: { enabled: true, color: '#ff0000', opacity: 10 },
     inProgress: { enabled: true, color: '#0066cc', opacity: 10 },
     pending: { enabled: true, color: '#ffaa00', opacity: 10 },
-    registered: { enabled: true, color: '#00aa00', opacity: 10 },
+    registered: { enabled: true, color: '#9333ea', opacity: 10 },
+    completed: { enabled: true, color: '#00aa00', opacity: 10 },
     inactive: { enabled: true, color: '#888888', opacity: 10 },
     withdrawn: { enabled: true, color: '#6b7280', opacity: 10 },
-    cancelled: { enabled: true, color: '#000000', opacity: 10 }
+    cancelled: { enabled: true, color: '#000000', opacity: 10 },
+    denied: { enabled: true, color: '#dc2626', opacity: 10 }
   };
 
   /**
@@ -57,12 +59,16 @@
         return trimmedText.toLowerCase().includes('pending');
       case 'registered':
         return trimmedText === 'Registered';
+      case 'completed':
+        return trimmedText === 'Completed';
       case 'inactive':
         return trimmedText === 'Inactive';
       case 'withdrawn':
         return trimmedText === 'Withdrawn';
       case 'cancelled':
         return trimmedText === 'Cancelled' || trimmedText === 'Canceled';
+      case 'denied':
+        return trimmedText === 'Denied';
       default:
         return false;
     }
@@ -101,7 +107,7 @@
     const spans = document.querySelectorAll('span');
     spans.forEach(span => {
       // Check each status type in the specified order
-      for (const statusType of ['registered', 'inProgress', 'pastDue', 'pending', 'inactive', 'withdrawn', 'cancelled']) {
+      for (const statusType of ['registered', 'inProgress', 'completed', 'pastDue', 'pending', 'inactive', 'withdrawn', 'cancelled', 'denied']) {
         if (matchesStatus(span, statusType)) {
           const li = findClosestLi(span);
           if (li) {
@@ -182,6 +188,9 @@
       'transcriptRegisteredEnabled',
       'transcriptRegisteredColor',
       'transcriptRegisteredOpacity',
+      'transcriptCompletedEnabled',
+      'transcriptCompletedColor',
+      'transcriptCompletedOpacity',
       'transcriptInactiveEnabled',
       'transcriptInactiveColor',
       'transcriptInactiveOpacity',
@@ -190,7 +199,10 @@
       'transcriptWithdrawnOpacity',
       'transcriptCancelledEnabled',
       'transcriptCancelledColor',
-      'transcriptCancelledOpacity'
+      'transcriptCancelledOpacity',
+      'transcriptDeniedEnabled',
+      'transcriptDeniedColor',
+      'transcriptDeniedOpacity'
     ]);
 
     isEnabled = storedSettings.highlightTranscriptStatuses || false;
@@ -199,11 +211,13 @@
     const statusConfig = {
       registered: { enabledKey: 'transcriptRegisteredEnabled', colorKey: 'transcriptRegisteredColor', opacityKey: 'transcriptRegisteredOpacity' },
       inProgress: { enabledKey: 'transcriptInProgressEnabled', colorKey: 'transcriptInProgressColor', opacityKey: 'transcriptInProgressOpacity' },
+      completed: { enabledKey: 'transcriptCompletedEnabled', colorKey: 'transcriptCompletedColor', opacityKey: 'transcriptCompletedOpacity' },
       pastDue: { enabledKey: 'transcriptPastDueEnabled', colorKey: 'transcriptPastDueColor', opacityKey: 'transcriptPastDueOpacity' },
       pending: { enabledKey: 'transcriptPendingEnabled', colorKey: 'transcriptPendingColor', opacityKey: 'transcriptPendingOpacity' },
       inactive: { enabledKey: 'transcriptInactiveEnabled', colorKey: 'transcriptInactiveColor', opacityKey: 'transcriptInactiveOpacity' },
       withdrawn: { enabledKey: 'transcriptWithdrawnEnabled', colorKey: 'transcriptWithdrawnColor', opacityKey: 'transcriptWithdrawnOpacity' },
-      cancelled: { enabledKey: 'transcriptCancelledEnabled', colorKey: 'transcriptCancelledColor', opacityKey: 'transcriptCancelledOpacity' }
+      cancelled: { enabledKey: 'transcriptCancelledEnabled', colorKey: 'transcriptCancelledColor', opacityKey: 'transcriptCancelledOpacity' },
+      denied: { enabledKey: 'transcriptDeniedEnabled', colorKey: 'transcriptDeniedColor', opacityKey: 'transcriptDeniedOpacity' }
     };
 
     Object.keys(statusConfig).forEach(statusType => {
@@ -272,9 +286,11 @@
         'transcriptInProgressEnabled', 'transcriptInProgressColor', 'transcriptInProgressOpacity',
         'transcriptPendingEnabled', 'transcriptPendingColor', 'transcriptPendingOpacity',
         'transcriptRegisteredEnabled', 'transcriptRegisteredColor', 'transcriptRegisteredOpacity',
+        'transcriptCompletedEnabled', 'transcriptCompletedColor', 'transcriptCompletedOpacity',
         'transcriptInactiveEnabled', 'transcriptInactiveColor', 'transcriptInactiveOpacity',
         'transcriptWithdrawnEnabled', 'transcriptWithdrawnColor', 'transcriptWithdrawnOpacity',
-        'transcriptCancelledEnabled', 'transcriptCancelledColor', 'transcriptCancelledOpacity'
+        'transcriptCancelledEnabled', 'transcriptCancelledColor', 'transcriptCancelledOpacity',
+        'transcriptDeniedEnabled', 'transcriptDeniedColor', 'transcriptDeniedOpacity'
       ];
 
       for (const key of transcriptKeys) {

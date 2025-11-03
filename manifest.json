@@ -32,11 +32,14 @@
         "content/enhancements/resize-pinned-links-icon.js",
         "content/enhancements/proxy-as-user.js",
         "content/enhancements/custom-page-preview-link.js",
+        "content/enhancements/custom-page-copy-link.js",
+        "content/enhancements/resize-custom-pages-container.js",
         "content/enhancements/sessions-checkbox-defaults.js",
         "content/enhancements/format-session-dates.js",
         "content/enhancements/lo-links.js",
         "content/enhancements/highlight-transcript-statuses.js",
         "content/enhancements/highlight-assignment-statuses.js",
+        "content/enhancements/highlight-environments.js",
         "content/content.js"
       ],
       "run_at": "document_idle"
