@@ -69,6 +69,186 @@ async function toggleTheme() {
   }
 }
 
+// Version update notification
+const GITHUB_REPO = 'hopeypants/cornerstone-lms-tools';
+
+/**
+ * Check GitHub for latest release version
+ */
+async function checkGitHubVersion() {
+  try {
+    const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
+      headers: {
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    
+    if (!response.ok) {
+      console.log('Version check: GitHub API request failed', response.status);
+      return null;
+    }
+    
+    const data = await response.json();
+    const latestVersion = data.tag_name.replace(/^v/, ''); // Remove 'v' prefix if present
+    const manifest = chrome.runtime.getManifest();
+    const currentVersion = manifest.version;
+    
+    // Simple version comparison (works for semantic versioning like 1.0.0, 1.1.0, etc.)
+    if (latestVersion !== currentVersion) {
+      return {
+        latest: latestVersion,
+        current: currentVersion,
+        url: data.html_url,
+        name: data.name || `v${latestVersion}`
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error checking GitHub version:', error);
+    return null;
+  }
+}
+
+/**
+ * Check for version updates and show notification
+ */
+async function checkVersionUpdate() {
+  try {
+    const manifest = chrome.runtime.getManifest();
+    const currentVersion = manifest.version;
+    
+    // First, try to check GitHub for latest version
+    const githubCheck = await checkGitHubVersion();
+    if (githubCheck) {
+      // Check if user has dismissed this version
+      const stored = await chrome.storage.sync.get(['versionUpdateDismissed']);
+      const dismissedVersion = stored.versionUpdateDismissed;
+      
+      if (dismissedVersion !== githubCheck.latest) {
+        showVersionUpdateNotification(githubCheck.latest, githubCheck.current, githubCheck.url, githubCheck.name);
+      }
+      return;
+    }
+    
+    // Fallback: Check local version change (for when GitHub check fails)
+    const stored = await chrome.storage.sync.get(['extensionVersion', 'versionUpdateDismissed']);
+    const storedVersion = stored.extensionVersion;
+    const dismissedVersion = stored.versionUpdateDismissed;
+    
+    // If version changed and not dismissed, show update notification
+    if (storedVersion && storedVersion !== currentVersion && dismissedVersion !== currentVersion) {
+      showVersionUpdateNotification(currentVersion, storedVersion);
+    }
+    
+    // Store current version
+    if (storedVersion !== currentVersion) {
+      await chrome.storage.sync.set({ extensionVersion: currentVersion });
+    }
+  } catch (error) {
+    console.error('Error checking version:', error);
+  }
+}
+
+/**
+ * Show version update notification
+ */
+function showVersionUpdateNotification(newVersion, oldVersion, downloadUrl = null, releaseName = null) {
+  // Remove any existing notification
+  const existing = document.getElementById('version-update-notification');
+  if (existing) {
+    existing.remove();
+  }
+  
+  // Create notification banner
+  const notification = document.createElement('div');
+  notification.id = 'version-update-notification';
+  notification.className = 'version-update-banner';
+  
+  const updateLink = downloadUrl 
+    ? `<a href="${downloadUrl}" target="_blank" style="color: var(--tab-active-color); text-decoration: underline; cursor: pointer;">Download v${newVersion}</a>`
+    : `<a href="#updating" id="update-instructions-link" style="color: var(--tab-active-color); text-decoration: underline; cursor: pointer;">Learn how to update</a>`;
+  
+  const releaseInfo = releaseName ? ` (${releaseName})` : '';
+  
+  notification.innerHTML = `
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 16px;">
+      <div style="flex: 1;">
+        <strong style="color: var(--text-primary);">🎉 New Version Available!</strong>
+        <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--text-secondary);">
+          ${downloadUrl ? `Version v${newVersion}${releaseInfo} is now available. ` : `Updated from v${oldVersion} to v${newVersion}. `}${updateLink}
+        </p>
+      </div>
+      <button id="dismiss-version-update" class="btn btn-secondary" style="padding: 4px 12px; font-size: 11px; margin-left: 12px;">Dismiss</button>
+    </div>
+  `;
+  
+  // Insert at top of main content (before first tab content)
+  const main = document.querySelector('main');
+  if (main && main.firstChild) {
+    main.insertBefore(notification, main.firstChild);
+  } else {
+    // Fallback: insert after header or at top of body
+    const header = document.querySelector('header');
+    if (header && header.nextElementSibling) {
+      header.parentNode.insertBefore(notification, header.nextElementSibling);
+    } else {
+      document.body.insertBefore(notification, document.body.firstChild);
+    }
+  }
+  
+  // Dismiss button handler
+  const dismissBtn = document.getElementById('dismiss-version-update');
+  if (dismissBtn) {
+    dismissBtn.addEventListener('click', async () => {
+      const manifest = chrome.runtime.getManifest();
+      const githubCheck = await checkGitHubVersion();
+      const versionToDismiss = githubCheck ? githubCheck.latest : manifest.version;
+      await chrome.storage.sync.set({ versionUpdateDismissed: versionToDismiss });
+      notification.remove();
+    });
+  }
+  
+  // Update instructions link handler (only if not a GitHub download link)
+  if (!downloadUrl) {
+    const updateLink = document.getElementById('update-instructions-link');
+    if (updateLink) {
+      updateLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Open GitHub releases page in new tab
+        window.open(`https://github.com/${GITHUB_REPO}/releases`, '_blank');
+      });
+    }
+  }
+}
+
+/**
+ * TEST FUNCTION: Manually trigger version update notification
+ * Call this from the browser console to test the notification UI
+ * 
+ * Usage:
+ *   testVersionNotification() // Shows default test notification
+ *   testVersionNotification('2.0.0', '1.0.0') // Custom versions
+ */
+window.testVersionNotification = function(newVersion = '1.1.0', oldVersion = '1.0.0') {
+  showVersionUpdateNotification(
+    newVersion, // new version
+    oldVersion, // old version
+    'https://github.com/hopeypants/cornerstone-lms-tools/releases/latest', // download URL
+    `Test Release v${newVersion}` // release name
+  );
+  console.log('Version notification test triggered. New version:', newVersion, 'Old version:', oldVersion);
+};
+
+/**
+ * TEST FUNCTION: Clear dismissed version to allow notification to show again
+ * Call this from the browser console to reset the dismissed state
+ */
+window.clearDismissedVersion = async function() {
+  await chrome.storage.sync.remove('versionUpdateDismissed');
+  console.log('Dismissed version cleared. Notification will show again on next check.');
+};
+
 // Default settings for all features
 const DEFAULT_SETTINGS = {
   headerLogoutLink: false,
@@ -181,6 +361,7 @@ const DEFAULT_SETTINGS = {
  */
 document.addEventListener('DOMContentLoaded', async () => {
   await loadSettings();
+  await checkVersionUpdate(); // Check for version updates
   setupEventListeners();
   setupTabNavigation();
   await loadSelectedTab(); // Restore the previously selected tab

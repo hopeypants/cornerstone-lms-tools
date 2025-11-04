@@ -1053,3 +1053,32 @@ body.dark-mode .radio-label input[type="radio"] {
   font-size: 11px;
 }
 
+/* Version Update Notification */
+.version-update-banner {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.version-update-banner a {
+  color: var(--tab-active-color) !important;
+  text-decoration: underline;
+}
+
+.version-update-banner a:hover {
+  opacity: 0.8;
+}
+
+.version-update-banner button {
+  white-space: nowrap;
+}
+
