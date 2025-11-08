@@ -106,10 +106,14 @@
 
     const spans = document.querySelectorAll('span');
     spans.forEach(span => {
+      const li = findClosestLi(span);
+      if (li && li.closest('ul[role="listbox"]')) {
+        return; // Skip listbox options
+      }
+
       // Check each status type in the specified order
       for (const statusType of ['registered', 'inProgress', 'completed', 'pastDue', 'pending', 'inactive', 'withdrawn', 'cancelled', 'denied']) {
         if (matchesStatus(span, statusType)) {
-          const li = findClosestLi(span);
           if (li) {
             highlightListItem(li, statusType);
           }
@@ -146,8 +150,12 @@
 
     const spans = document.querySelectorAll('span');
     spans.forEach(span => {
+      const li = findClosestLi(span);
+      if (li && li.closest('ul[role="listbox"]')) {
+        return; // Skip listbox options
+      }
+
       if (matchesStatus(span, statusType)) {
-        const li = findClosestLi(span);
         if (li) {
           if (li.style.backgroundColor) {
             li.style.backgroundColor = '';

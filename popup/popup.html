@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cornerstone LMS Admin Tools</title>
     <link rel="stylesheet" href="popup.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/3.2.1/css/font-awesome.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
   </head>
 <body class="dark-mode">
   <div class="container">
@@ -34,10 +34,11 @@
     <main>
       <!-- Global Tab -->
       <div class="tab-content active" id="global-tab">
-        <section class="category">
+        <!-- Header Icons Section -->
+        <section class="category" id="header-icons-section">
           <h2 class="category-title">
-            <span class="category-icon">🌐</span>
-            Global Features
+            <span class="category-icon">🎨</span>
+            Header Icons
           </h2>
           <div class="category-content">
             <div class="toggle-item">
@@ -50,6 +51,56 @@
                 <span class="slider"></span>
               </label>
             </div>
+            <div class="toggle-item" id="resize-ai-icon-item" style="display: none;">
+              <div class="toggle-info">
+                <label for="resize-ai-icon">Resize Galaxy AI icon</label>
+                <p class="toggle-description">Control the size of the Cornerstone Galaxy AI icon in the header.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="resize-ai-icon" data-feature="resizeAIIcon">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <!-- AI Icon Size Control -->
+            <div class="form-group" id="ai-icon-size-config" style="margin-top: 8px; display: none;">
+              <label class="form-label" for="ai-icon-size">AI Icon Size</label>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <input type="range" id="ai-icon-size" min="16" max="48" value="32" step="2" style="flex: 1;">
+                <span id="ai-icon-size-value" style="min-width: 40px; text-align: center; font-weight: 500; color: var(--text-primary);">32px</span>
+                <button id="reset-ai-icon-size" class="reset-button inline">Reset</button>
+              </div>
+            </div>
+
+            <div class="toggle-item" id="resize-pinned-links-icon-item" style="display: none;">
+              <div class="toggle-info">
+                <label for="resize-pinned-links-icon">Resize Pinned Links icon</label>
+                <p class="toggle-description">Control the size of the Pinned Links icon in the header.</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="resize-pinned-links-icon" data-feature="resizePinnedLinksIcon">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <!-- Pinned Links Icon Size Control -->
+            <div class="form-group" id="pinned-links-icon-size-config" style="margin-top: 8px; display: none;">
+              <label class="form-label" for="pinned-links-icon-size">Pinned Links Icon Size</label>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <input type="range" id="pinned-links-icon-size" min="16" max="48" value="22" step="2" style="flex: 1;">
+                <span id="pinned-links-icon-size-value" style="min-width: 40px; text-align: center; font-weight: 500; color: var(--text-primary);">22px</span>
+                <button id="reset-pinned-links-icon-size" class="reset-button inline">Reset</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="category">
+          <h2 class="category-title">
+            <span class="category-icon">🔗</span>
+            Header Links
+          </h2>
+          <div class="category-content">
             <div class="toggle-item">
               <div class="toggle-info">
                 <label for="custom-header-links">Custom Header Links</label>
@@ -104,57 +155,6 @@
             </div>
             <div id="custom-links-list" class="custom-links-list">
               <!-- Custom links will be rendered here -->
-            </div>
-          </div>
-        </section>
-
-        <!-- Header Icons Section -->
-        <section class="category" id="header-icons-section">
-          <h2 class="category-title">
-            <span class="category-icon">🎨</span>
-            Header Icons
-          </h2>
-          <div class="category-content">
-            <div class="toggle-item" id="resize-ai-icon-item" style="display: none;">
-              <div class="toggle-info">
-                <label for="resize-ai-icon">Resize Galaxy AI icon</label>
-                <p class="toggle-description">Control the size of the Cornerstone Galaxy AI icon in the header.</p>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="resize-ai-icon" data-feature="resizeAIIcon">
-                <span class="slider"></span>
-              </label>
-            </div>
-
-            <!-- AI Icon Size Control -->
-            <div class="form-group" id="ai-icon-size-config" style="margin-top: 8px; display: none;">
-              <label class="form-label" for="ai-icon-size">AI Icon Size</label>
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <input type="range" id="ai-icon-size" min="16" max="48" value="32" step="2" style="flex: 1;">
-                <span id="ai-icon-size-value" style="min-width: 40px; text-align: center; font-weight: 500; color: var(--text-primary);">32px</span>
-                <button id="reset-ai-icon-size" class="reset-button inline">Reset</button>
-              </div>
-            </div>
-
-            <div class="toggle-item" id="resize-pinned-links-icon-item" style="display: none;">
-              <div class="toggle-info">
-                <label for="resize-pinned-links-icon">Resize Pinned Links icon</label>
-                <p class="toggle-description">Control the size of the Pinned Links icon in the header.</p>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="resize-pinned-links-icon" data-feature="resizePinnedLinksIcon">
-                <span class="slider"></span>
-              </label>
-            </div>
-
-            <!-- Pinned Links Icon Size Control -->
-            <div class="form-group" id="pinned-links-icon-size-config" style="margin-top: 8px; display: none;">
-              <label class="form-label" for="pinned-links-icon-size">Pinned Links Icon Size</label>
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <input type="range" id="pinned-links-icon-size" min="16" max="48" value="22" step="2" style="flex: 1;">
-                <span id="pinned-links-icon-size-value" style="min-width: 40px; text-align: center; font-weight: 500; color: var(--text-primary);">22px</span>
-                <button id="reset-pinned-links-icon-size" class="reset-button inline">Reset</button>
-              </div>
             </div>
           </div>
         </section>
@@ -1315,7 +1315,7 @@
       <div class="footer-info">
         <div class="footer-left">
           <a href="https://github.com/hopeypants/cornerstone-lms-tools" target="_blank" class="github-link">
-            <i class="icon-github"></i> GitHub
+            <i class="fa-brands fa-github"></i> GitHub
           </a>
         </div>
         <div class="footer-center">

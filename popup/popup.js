@@ -1075,10 +1075,17 @@ function setupCustomLinksManagement() {
 
   // Set up event delegation for edit/delete buttons (only once)
   const container = document.getElementById('custom-links-list');
-  container.addEventListener('click', (e) => {
+  container.addEventListener('click', async (e) => {
     if (e.target.matches('[data-action="edit"]')) {
       const index = parseInt(e.target.dataset.index);
-      editCustomLink(index);
+      const result = await chrome.storage.sync.get(['customHeaderLinks']);
+      const customLinks = result.customHeaderLinks || [];
+      const link = customLinks[index];
+      if (link && link.type === 'separator') {
+        editSeparator(index);
+      } else {
+        editCustomLink(index);
+      }
     } else if (e.target.matches('[data-action="delete"]')) {
       const index = parseInt(e.target.dataset.index);
       deleteCustomLink(index);
@@ -1137,17 +1144,13 @@ const AVAILABLE_ICONS = [
   { value: 'custom', label: 'Custom', fa3: 'fa-icon-magic', fa6: 'fa-solid fa-paintbrush', none: '🎨' }
 ];
 
-// Use FA3 for popup to match the webpage
+// Use FA7 for popup (FA7 uses same class format as FA6)
 const getIconClassForPopup = (iconName) => {
   const icon = AVAILABLE_ICONS.find(i => i.value === iconName);
-  if (!icon) return 'icon-link';
+  if (!icon) return 'fa-solid fa-link';
   
-  // Convert fa-icon-* to icon-* for FontAwesome 3
-  const fa3Class = icon.fa3;
-  if (fa3Class.startsWith('fa-icon-')) {
-    return fa3Class.replace('fa-icon-', 'icon-');
-  }
-  return fa3Class || 'icon-link';
+  // Use FA6/FA7 class format
+  return icon.fa6 || icon.fa3 || 'fa-solid fa-link';
 };
 
 /**
@@ -1172,7 +1175,7 @@ async function addTranscriptLinks() {
         label: 'Transcript: Archived',
         url: '/phnx/driver.aspx?routename=Social/UniversalProfile/Transcript&preSelectedCategoryId=2',
         icon: 'custom',
-        customIcon: 'icon-archive',
+        customIcon: 'fa-solid fa-archive',
         tooltip: 'Transcript: Archived',
         openNewTab: false,
         iconColor: '#ffffff'
@@ -1181,7 +1184,7 @@ async function addTranscriptLinks() {
         label: 'Transcript: Completed',
         url: '/phnx/driver.aspx?routename=Social/UniversalProfile/Transcript&preSelectedCategoryId=3',
         icon: 'custom',
-        customIcon: 'icon-check',
+        customIcon: 'fa-solid fa-check',
         tooltip: 'Transcript: Completed',
         openNewTab: false,
         iconColor: '#ffffff'
@@ -1190,7 +1193,7 @@ async function addTranscriptLinks() {
         label: 'Transcript: Active',
         url: '/phnx/driver.aspx?routename=Social/UniversalProfile/Transcript&preSelectedCategoryId=1',
         icon: 'custom',
-        customIcon: 'icon-edit',
+        customIcon: 'fa-solid fa-pencil',
         tooltip: 'Transcript: Active',
         openNewTab: false,
         iconColor: '#ffffff'
@@ -1199,7 +1202,7 @@ async function addTranscriptLinks() {
         label: 'Transcript: All',
         url: '/phnx/driver.aspx?routename=Social/UniversalProfile/Transcript&preSelectedCategoryId=9',
         icon: 'custom',
-        customIcon: 'icon-list-alt',
+        customIcon: 'fa-solid fa-list-check',
         tooltip: 'Transcript: All',
         openNewTab: false,
         iconColor: '#ffffff'
@@ -1261,7 +1264,10 @@ async function addSeparator() {
     const separator = {
       type: 'separator',
       label: 'Separator',
-      id: `separator-${Date.now()}`
+      id: `separator-${Date.now()}`,
+      color: '#ffffff', // Default white color
+      width: 1, // Default 1px width
+      height: 60 // Default 60% height (top and bottom: 20% each)
     };
     
     customLinks.unshift(separator);
@@ -1291,6 +1297,270 @@ async function addSeparator() {
   } catch (error) {
     console.error('Error adding separator:', error);
     showValidationModal('Error adding separator. Please try again.');
+  }
+}
+
+/**
+ * Edit a separator
+ * @param {number} index - Separator index
+ */
+async function editSeparator(index) {
+  try {
+    const result = await chrome.storage.sync.get(['customHeaderLinks']);
+    let customLinks = result.customHeaderLinks;
+    
+    // Ensure customLinks is always an array - but preserve existing data
+    if (!Array.isArray(customLinks)) {
+      console.warn('customLinks is not an array, initializing as empty array but NOT saving:', customLinks);
+      customLinks = [];
+      // DO NOT save empty array - it might wipe out data during toggle operations
+    }
+    
+    if (index >= 0 && index < customLinks.length) {
+      const separator = customLinks[index];
+      if (separator && separator.type === 'separator') {
+        showSeparatorForm(separator, index);
+      }
+    }
+  } catch (error) {
+    console.error('Error loading separator for editing:', error);
+  }
+}
+
+/**
+ * Show separator edit form
+ * @param {Object} separator - Separator object
+ * @param {number} index - Separator index
+ */
+function showSeparatorForm(separator = null, index = null) {
+  const modal = document.createElement('div');
+  modal.className = 'link-form-modal';
+  
+  const isEditing = separator !== null;
+  const title = isEditing ? 'Edit Separator' : 'Add Separator';
+  const currentColor = separator?.color || '#ffffff';
+  const currentWidth = separator?.width || 1;
+  const currentHeight = separator?.height || 60; // Default 60% height
+  const currentTop = (100 - currentHeight) / 2; // Equal spacing top and bottom
+  
+  modal.innerHTML = `
+    <div class="link-form-content">
+      <div class="link-form-header">
+        <h3>${title}</h3>
+      </div>
+      <div class="link-form-body">
+        <div class="form-group">
+          <label for="separator-width">Width</label>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <input type="range" id="separator-width" min="1" max="10" value="${currentWidth}" step="1" style="flex: 1;">
+            <span id="separator-width-value" style="min-width: 40px; text-align: center; font-weight: 500; color: var(--text-primary);">${currentWidth}px</span>
+          </div>
+          <small style="color: #6b7280; font-size: 11px; margin-top: 4px; display: block;">Width of the separator (1px - 10px)</small>
+        </div>
+        <div class="form-group" style="margin-top: 16px;">
+          <label for="separator-color">Color</label>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <input type="color" id="separator-color" value="${currentColor}" style="width: 60px; height: 40px; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer;">
+            <input type="text" id="separator-color-text" value="${currentColor}" placeholder="#ffffff" style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-family: monospace;">
+          </div>
+          <small style="color: #6b7280; font-size: 11px; margin-top: 4px; display: block;">Color of the separator</small>
+        </div>
+        <div class="form-group" style="margin-top: 16px;">
+          <label for="separator-height">Height</label>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <input type="range" id="separator-height" min="10" max="100" value="${currentHeight}" step="5" style="flex: 1;">
+            <span id="separator-height-value" style="min-width: 50px; text-align: center; font-weight: 500; color: var(--text-primary);">${currentHeight}%</span>
+          </div>
+          <small style="color: #6b7280; font-size: 11px; margin-top: 4px; display: block;">Height of the separator (top and bottom spacing: ${currentTop}% each - equal spacing)</small>
+        </div>
+        <div class="form-group" style="margin-top: 16px; padding: 12px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <label style="margin-bottom: 8px; display: block;">Preview</label>
+          <div id="separator-preview" style="position: relative; width: 100%; height: 60px; background: #1f2937; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+            <div style="position: absolute; top: ${currentTop}%; left: 50%; transform: translateX(-50%); width: ${currentWidth}px; height: ${currentHeight}%; background-color: ${currentColor};"></div>
+          </div>
+        </div>
+      </div>
+      <div class="link-form-footer">
+        <button class="btn btn-secondary" id="cancel-separator-btn">Cancel</button>
+        <button class="btn btn-primary" id="save-separator-btn" data-index="${index !== null ? index : ''}">${isEditing ? 'Update' : 'Add'} Separator</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Close handlers
+  const cancelBtn = modal.querySelector('#cancel-separator-btn');
+  const closeModal = () => modal.remove();
+  
+  cancelBtn.addEventListener('click', closeModal);
+  
+  // Get form elements
+  const widthInput = modal.querySelector('#separator-width');
+  const widthValue = modal.querySelector('#separator-width-value');
+  const colorInput = modal.querySelector('#separator-color');
+  const colorTextInput = modal.querySelector('#separator-color-text');
+  const heightInput = modal.querySelector('#separator-height');
+  const heightValue = modal.querySelector('#separator-height-value');
+  const previewContainer = modal.querySelector('#separator-preview');
+  const previewDiv = previewContainer.querySelector('div');
+  
+  // Update preview function
+  const updatePreview = () => {
+    const width = parseInt(widthInput.value) || 1;
+    const color = colorTextInput.value.trim() || '#ffffff';
+    const height = parseInt(heightInput.value) || 60;
+    const top = (100 - height) / 2; // Equal spacing top and bottom
+    
+    widthValue.textContent = `${width}px`;
+    heightValue.textContent = `${height}%`;
+    
+    // Update help text
+    const helpText = heightInput.parentElement.querySelector('small');
+    if (helpText) {
+      helpText.textContent = `Height of the separator (top and bottom spacing: ${top}% each - equal spacing)`;
+    }
+    
+    if (previewDiv) {
+      previewDiv.style.width = `${width}px`;
+      previewDiv.style.height = `${height}%`;
+      previewDiv.style.top = `${top}%`;
+      previewDiv.style.backgroundColor = color;
+    }
+  };
+  
+  // Width slider handler
+  widthInput.addEventListener('input', (e) => {
+    updatePreview();
+  });
+  
+  // Height slider handler
+  heightInput.addEventListener('input', (e) => {
+    updatePreview();
+  });
+  
+  // Color picker and text input synchronization
+  const updateColor = (color) => {
+    colorInput.value = color;
+    colorTextInput.value = color;
+    updatePreview();
+  };
+  
+  colorInput.addEventListener('input', (e) => {
+    updateColor(e.target.value);
+  });
+  
+  colorTextInput.addEventListener('input', (e) => {
+    const color = e.target.value;
+    // Validate hex color
+    if (/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color)) {
+      updateColor(color);
+    } else if (color.length === 0 || color === '#') {
+      // Allow empty or just # for typing
+      updatePreview();
+    }
+  });
+  
+  // Initial preview update
+  updatePreview();
+  
+  // Save handler
+  const saveBtn = modal.querySelector('#save-separator-btn');
+  saveBtn.addEventListener('click', async () => {
+    const width = parseInt(widthInput.value) || 1;
+    const color = colorTextInput.value.trim() || '#ffffff';
+    const height = parseInt(heightInput.value) || 60;
+    
+    // Validate width
+    if (width < 1 || width > 10) {
+      showValidationModal('Width must be between 1px and 10px');
+      return;
+    }
+    
+    // Validate height
+    if (height < 10) {
+      showValidationModal('Height must be at least 10%');
+      return;
+    }
+    
+    // Validate color
+    if (!/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color)) {
+      showValidationModal('Please enter a valid hex color (e.g., #ffffff)');
+      return;
+    }
+    
+    // Normalize to 6-digit hex
+    let normalizedColor = color;
+    if (color.length === 4) {
+      // Convert 3-digit to 6-digit
+      normalizedColor = `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`;
+    }
+    
+    await saveSeparator(normalizedColor, width, height, index);
+    closeModal();
+  });
+}
+
+/**
+ * Save separator
+ * @param {string} color - Separator color
+ * @param {number} width - Separator width (1-10px)
+ * @param {number} height - Separator height (10-90%)
+ * @param {number} index - Separator index (null for new)
+ */
+async function saveSeparator(color, width, height, index = null) {
+  try {
+    const result = await chrome.storage.sync.get(['customHeaderLinks']);
+    let customLinks = result.customHeaderLinks;
+    
+    // Ensure customLinks is always an array
+    if (!Array.isArray(customLinks)) {
+      console.warn('customLinks is not an array, resetting to empty array:', customLinks);
+      customLinks = [];
+    }
+    
+    if (index !== null) {
+      // Editing existing separator
+      if (index >= 0 && index < customLinks.length) {
+        customLinks[index].color = color;
+        customLinks[index].width = width;
+        customLinks[index].height = height;
+        console.log('Updated separator at index', index, { color, width, height });
+      } else {
+        throw new Error(`Invalid index ${index} for editing separator`);
+      }
+    } else {
+      // Adding new separator
+      const separator = {
+        type: 'separator',
+        label: 'Separator',
+        id: `separator-${Date.now()}`,
+        color: color,
+        width: width,
+        height: height
+      };
+      customLinks.unshift(separator);
+      console.log('Added new separator at the beginning:', separator);
+    }
+    
+    await chrome.storage.sync.set({ customHeaderLinks: customLinks });
+    
+    // Notify content script about the change
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab && tab.url && tab.url.includes('csod.com')) {
+      chrome.tabs.sendMessage(tab.id, {
+        type: 'CUSTOM_LINKS_UPDATED',
+        customLinks: customLinks
+      }).catch(err => {
+        console.log('Content script not ready:', err);
+      });
+    }
+    
+    loadCustomLinks();
+    showStatus('Separator saved successfully.', false);
+  } catch (error) {
+    console.error('Error saving separator:', error);
+    showValidationModal('Error saving separator. Please try again.');
   }
 }
 
@@ -1570,15 +1840,23 @@ function createCustomLinkElement(link, index) {
 
   // Handle separators differently
   if (link.type === 'separator') {
+    const separatorColor = link.color || '#ffffff';
+    const separatorWidth = link.width || 1;
+    const separatorHeight = link.height || 60;
+    const separatorTop = (100 - separatorHeight) / 2; // Equal spacing top and bottom
     linkElement.innerHTML = `
       <div class="custom-link-drag-handle" title="Drag to reorder">⋮⋮</div>
       <div class="custom-link-icon">
-        <span style="font-size: 16px; color: #9ca3af;">|</span>
+        <div style="position: relative; width: 20px; height: 30px; background: #1f2937; border-radius: 2px; display: flex; align-items: center; justify-content: center;">
+          <div style="position: absolute; top: ${separatorTop}%; left: 50%; transform: translateX(-50%); width: ${Math.min(separatorWidth, 4)}px; height: ${separatorHeight}%; background-color: ${separatorColor};"></div>
+        </div>
       </div>
       <div class="custom-link-info">
         <div class="custom-link-label" style="color: #9ca3af; font-style: italic;">Separator</div>
+        <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">Width: ${separatorWidth}px | Height: ${separatorHeight}% | Color: ${separatorColor}</div>
       </div>
       <div class="custom-link-actions">
+        <button class="btn btn-secondary" data-action="edit" data-index="${index}">Edit</button>
         <button class="btn btn-danger" data-action="delete" data-index="${index}">Delete</button>
       </div>
     `;
@@ -1647,18 +1925,25 @@ function showLinkForm(link = null, index = null) {
               ? `<div class="fa-icon-option custom-empty-option" data-icon="${icon.value}" title="${icon.label}">
                 </div>`
               : `<div class="fa-icon-option" data-icon="${icon.value}" title="${icon.label}">
-                  <i class="${getIconClassForPopup(icon.value)}"></i>
+                  <i class="${icon.fa6 || icon.fa3 || 'fa-solid fa-link'}"></i>
                 </div>`
           ).join('')}
         </div>
         <div class="custom-icon-section" style="margin-top: 12px; padding: 8px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0;">
           <div style="display: flex; align-items: center; margin-bottom: 6px;">
-            <i class="icon-paintbrush" style="margin-right: 6px; color: #6366f1;"></i>
+            <i class="fa-solid fa-paintbrush" style="margin-right: 6px; color: #6366f1;"></i>
             <span style="font-size: 12px; font-weight: 500; color: #374151;">Custom Icon</span>
           </div>
-          <input type="text" id="custom-icon-class" class="form-input" placeholder="e.g., icon-rocket or fa-icon-rocket" value="${link?.customIcon || ''}" style="font-size: 12px;">
+          <input type="text" id="custom-icon-class" class="form-input" placeholder="e.g., face-smile or rocket" value="${link?.customIcon ? (() => {
+            const iconClass = link.customIcon.trim();
+            if (iconClass.includes('fa-solid') || iconClass.includes('fa-regular') || iconClass.includes('fa-brands')) {
+              // Extract just the icon name (remove fa-solid fa-, fa-regular fa-, fa-brands fa-)
+              return iconClass.replace(/^(fa-solid|fa-regular|fa-brands)\s+fa-/, '').trim();
+            }
+            return iconClass;
+          })() : ''}" style="font-size: 12px;">
           <small style="color: #6b7280; font-size: 10px;">
-            Enter any Font Awesome v3 class (e.g., icon-rocket, icon-github, etc.)&emsp;|&emsp;<a href="https://fontawesome.com/v3/icons/" target="_blank" style="color: #3b82f6; text-decoration: underline;">View all available icons →</a>
+            Enter just the icon name (e.g., star, rocket)&emsp;|&emsp;<a href="https://fontawesome.com/search?f=classic&s=solid&ic=free&o=r" target="_blank" style="color: #3b82f6; text-decoration: underline;">View available icons ➡</a>
           </small>
         </div>
       </div>
@@ -1851,7 +2136,23 @@ async function saveCustomLink(index) {
   const customClass = customIconInput.value.trim();
   if (customClass) {
     icon = 'custom';
-    customIcon = customClass;
+    
+    // Format the icon name - always use solid style
+    // If it's already a full class (fa-solid, fa-regular, fa-brands), keep it as-is
+    if (customClass.includes('fa-solid') || customClass.includes('fa-regular') || customClass.includes('fa-brands')) {
+      customIcon = customClass;
+    } else {
+      // Extract icon name (remove any existing fa- prefixes)
+      let iconName = customClass
+        .replace(/^fa-solid\s+fa-/, '')
+        .replace(/^fa-regular\s+fa-/, '')
+        .replace(/^fa-brands\s+fa-/, '')
+        .replace(/^fa-/, '')
+        .trim();
+      
+      // Always format as solid
+      customIcon = `fa-solid fa-${iconName}`;
+    }
   } else if (selectedIconOption) {
     // Regular icon
     icon = selectedIconOption.dataset.icon;
@@ -1869,7 +2170,7 @@ async function saveCustomLink(index) {
   
   // Check if custom icon is selected but no custom icon class is provided
   if (icon === 'custom' && !customIcon) {
-    showValidationModal('Please enter a custom icon class (e.g., icon-rocket, icon-github) in the Custom Icon field.');
+    showValidationModal('Please enter an icon name (e.g., face-smile, rocket) in the Custom Icon field.');
     return;
   }
 
@@ -2804,18 +3105,14 @@ function updatePinnedLinksIconToggleAvailability(available) {
 
 /**
  * Update Header Icons section visibility based on icon availability
- * Hide the section if both icons are not available
+ * Always show the section since Header Logout Link should always be visible
  */
 function updateHeaderIconsSectionVisibility() {
   const headerIconsSection = document.getElementById('header-icons-section');
   
   if (headerIconsSection) {
-    // Show section if at least one icon is available, hide if both are unavailable
-    if (aiIconAvailable || pinnedLinksIconAvailable) {
-      headerIconsSection.style.display = 'block';
-    } else {
-      headerIconsSection.style.display = 'none';
-    }
+    // Always show the section since Header Logout Link should always be visible
+    headerIconsSection.style.display = 'block';
   }
 }
 

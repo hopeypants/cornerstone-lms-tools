@@ -30,6 +30,24 @@
           table.CsList.tbl-std tbody tr:hover .custom-page-copy-btn {
             opacity: 1 !important;
           }
+          .copied-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #d4edda;
+            color: #155724;
+            padding: 12px 20px;
+            border: 1px solid #c3e6cb;
+            border-radius: 4px;
+            display: none;
+            z-index: 10000;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            min-width: 200px;
+            text-align: center;
+          }
         `;
         document.head.appendChild(style);
         console.log('Custom Page Copy Link: Styles injected');
@@ -201,25 +219,6 @@
               copiedMessage = document.createElement('div');
               copiedMessage.className = 'copied-message';
               copiedMessage.textContent = 'Copied!';
-              // Bootstrap-style success alert at top
-              copiedMessage.style.cssText = `
-                position: fixed;
-                top: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: #d4edda;
-                color: #155724;
-                padding: 12px 20px;
-                border: 1px solid #c3e6cb;
-                border-radius: 4px;
-                display: none;
-                z-index: 10000;
-                font-size: 14px;
-                font-weight: 500;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-                min-width: 200px;
-                text-align: center;
-              `;
               document.body.appendChild(copiedMessage);
             }
             

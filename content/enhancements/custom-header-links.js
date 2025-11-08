@@ -11,6 +11,48 @@ class CustomHeaderLinksEnhancement {
     this.linksContainer = null;
     this.iconSize = 20; // Default icon size in pixels
     this.isRendering = false; // Flag to prevent duplicate rendering
+    this.flexStyleElement = null; // Reference to the injected flex CSS style element
+  }
+
+  /**
+   * Inject CSS for .c-hdr-item :first-child display: flex (excluding custom-separator)
+   */
+  injectFlexCSS() {
+    // Remove existing style if it exists
+    this.removeFlexCSS();
+    
+    const styleId = 'custom-header-links-flex-css';
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      .c-hdr-item :first-child:not(.custom-separator :first-child) {
+        display: flex;
+        justify-content: center;
+      }
+    `;
+    document.head.appendChild(style);
+    this.flexStyleElement = style;
+    console.log(`${this.name}: Injected flex CSS for .c-hdr-item :first-child (excluding custom-separator)`);
+  }
+
+  /**
+   * Remove the flex CSS
+   */
+  removeFlexCSS() {
+    if (this.flexStyleElement) {
+      if (this.flexStyleElement.parentNode) {
+        this.flexStyleElement.parentNode.removeChild(this.flexStyleElement);
+      }
+      this.flexStyleElement = null;
+      console.log(`${this.name}: Removed flex CSS`);
+    } else {
+      // Also try to remove by ID in case the reference is lost
+      const existingStyle = document.getElementById('custom-header-links-flex-css');
+      if (existingStyle) {
+        existingStyle.remove();
+        console.log(`${this.name}: Removed flex CSS by ID`);
+      }
+    }
   }
 
   /**
@@ -18,6 +60,14 @@ class CustomHeaderLinksEnhancement {
    */
   async initialize() {
     console.log(`${this.name}: Initializing...`);
+
+    // Load Font Awesome 7 for icon rendering
+    if (window.FontAwesomeUtil) {
+      await window.FontAwesomeUtil.load();
+    }
+
+    // Inject flex CSS when feature is enabled
+    this.injectFlexCSS();
 
     try {
       // Load icon size from storage
@@ -32,7 +82,7 @@ class CustomHeaderLinksEnhancement {
       
       // Render all custom links directly to header (only if we have links)
       if (this.customLinks.length > 0) {
-        this.renderCustomLinks();
+      this.renderCustomLinks();
       }
       
       // Apply icon size to all icons (including default CSOD icons) - always do this
@@ -40,7 +90,7 @@ class CustomHeaderLinksEnhancement {
       
       // Setup MutationObserver to keep custom links at the start (only if we have links)
       if (this.customLinks.length > 0) {
-        this.setupHeaderItemsObserver();
+      this.setupHeaderItemsObserver();
       }
       
       console.log(`${this.name}: Custom links initialized with ${this.customLinks.length} links`);
@@ -78,10 +128,16 @@ class CustomHeaderLinksEnhancement {
    * Apply icon size to an icon element
    */
   applyIconSize(iconElement) {
-    if (iconElement && this.iconSize) {
-      iconElement.style.fontSize = `${this.iconSize}px`;
-      iconElement.style.setProperty('font-size', `${this.iconSize}px`, 'important');
-      console.log(`${this.name}: Applied icon size ${this.iconSize}px to icon element`);
+    if (iconElement) {
+      // Always set z-index
+      iconElement.style.zIndex = '1';
+      iconElement.style.setProperty('z-index', '1', 'important');
+      
+      if (this.iconSize) {
+        iconElement.style.fontSize = `${this.iconSize}px`;
+        iconElement.style.setProperty('font-size', `${this.iconSize}px`, 'important');
+        console.log(`${this.name}: Applied icon size ${this.iconSize}px to icon element`);
+      }
     }
   }
   
@@ -102,19 +158,8 @@ class CustomHeaderLinksEnhancement {
     let totalIconsApplied = 0;
     
     headerItems.forEach((headerItem, itemIndex) => {
-      // Check if this is a custom separator
+      // Check if this is a custom separator - separators are now border-based, skip icon processing
       if (headerItem.classList.contains('custom-separator')) {
-        const separatorSpan = headerItem.querySelector('span');
-        if (separatorSpan) {
-          // Separator has minimum font size of 30px, but can be larger if iconSize is larger
-          const separatorSize = Math.max(this.iconSize || 20, 30);
-          separatorSpan.style.fontSize = `${separatorSize}px`;
-          separatorSpan.style.setProperty('font-size', `${separatorSize}px`, 'important');
-          separatorSpan.style.fontWeight = '100';
-          separatorSpan.style.setProperty('font-weight', '100', 'important');
-          totalIconsApplied++;
-          console.log(`${this.name}: Applied font size ${separatorSize}px (min 30px) and weight 100 to separator in header item ${itemIndex}`);
-        }
         return; // Skip icon processing for separators
       }
       
@@ -131,6 +176,8 @@ class CustomHeaderLinksEnhancement {
           // If search is active, set to 20px
           icon.style.fontSize = '20px';
           icon.style.setProperty('font-size', '20px', 'important');
+          icon.style.zIndex = '1';
+          icon.style.setProperty('z-index', '1', 'important');
           console.log(`${this.name}: Applied 20px to active search icon in header item ${itemIndex}`);
         } else {
           // Apply custom icon size
@@ -165,6 +212,8 @@ class CustomHeaderLinksEnhancement {
         if (icon) {
           icon.style.fontSize = `${finalSize}px`;
           icon.style.setProperty('font-size', `${finalSize}px`, 'important');
+          icon.style.zIndex = '1';
+          icon.style.setProperty('z-index', '1', 'important');
           console.log(`${this.name}: Applied ${finalSize}px to search icon ${iconIndex} in search item ${itemIndex}`);
         }
       });
@@ -424,17 +473,68 @@ class CustomHeaderLinksEnhancement {
     }
     
     // Move all custom links to before the first non-custom item (or to start if none exist)
-    // Reverse iteration to maintain order when inserting
-    const customLinksArray = Array.from(allCustomLinks);
-    for (let i = customLinksArray.length - 1; i >= 0; i--) {
+    // Use the order from this.elements array (matches this.customLinks order) to maintain correct order
+    // If this.elements is not available or out of sync, fall back to DOM order
+    let customLinksArray;
+    
+    if (this.elements && this.elements.length === allCustomLinks.length) {
+      // Use this.elements order (which matches customLinks order)
+      // Filter to only include elements that are still in the DOM and in allCustomLinks
+      const allCustomLinksArray = Array.from(allCustomLinks);
+      customLinksArray = this.elements.filter(el => 
+        el && 
+        el.parentNode === header && 
+        allCustomLinksArray.includes(el)
+      );
+      
+      // Add any missing elements from allCustomLinks that aren't in this.elements
+      allCustomLinksArray.forEach(el => {
+        if (!customLinksArray.includes(el)) {
+          customLinksArray.push(el);
+        }
+      });
+    } else {
+      // Fallback: use DOM order (may not be correct, but better than reverse)
+      customLinksArray = Array.from(allCustomLinks);
+    }
+    
+    // Determine insertion point (before first non-custom item, or at start)
+    const insertionPoint = firstNonCustomItem || header.firstChild;
+    
+    // Insert first item before insertion point
+    if (customLinksArray.length > 0 && customLinksArray[0].parentNode === header) {
+      if (insertionPoint) {
+        header.insertBefore(customLinksArray[0], insertionPoint);
+      } else {
+        if (header.firstChild) {
+          header.insertBefore(customLinksArray[0], header.firstChild);
+        } else {
+          header.appendChild(customLinksArray[0]);
+        }
+      }
+    }
+    
+    // Insert subsequent items after the previous one (to maintain order)
+    for (let i = 1; i < customLinksArray.length; i++) {
       const link = customLinksArray[i];
       if (link && link.parentNode === header) {
-        if (firstNonCustomItem) {
-          header.insertBefore(link, firstNonCustomItem);
+        const previousLink = customLinksArray[i - 1];
+        if (previousLink && previousLink.nextSibling) {
+          // Insert after previous link
+          header.insertBefore(link, previousLink.nextSibling);
+        } else if (previousLink) {
+          // Previous link has no next sibling, insert before insertion point
+          if (insertionPoint) {
+            header.insertBefore(link, insertionPoint);
         } else {
-          // If no non-custom items exist, move to start
-          if (header.firstChild) {
-            header.insertBefore(link, header.firstChild);
+            header.appendChild(link);
+          }
+        } else {
+          // Fallback
+          if (insertionPoint) {
+            header.insertBefore(link, insertionPoint);
+          } else {
+            header.appendChild(link);
           }
         }
       }
@@ -529,6 +629,11 @@ class CustomHeaderLinksEnhancement {
         console.warn(`${this.name}: Could not find header element`);
         return;
       }
+      
+      // Ensure header is positioned relatively for separator positioning
+      if (window.getComputedStyle(header).position === 'static') {
+        header.style.position = 'relative';
+      }
 
       // Clear existing links from DOM directly (more robust than relying on this.elements)
       // Remove all custom link elements by querying the DOM directly
@@ -550,34 +655,56 @@ class CustomHeaderLinksEnhancement {
       const insertionPoint = this.findInsertionPoint(header);
       
       // Render each custom link directly to the header, inserting at the start
-      // Iterate in reverse order so that when we insert before the same reference point,
-      // items at the beginning of the array (top of list) end up leftmost
-      let currentInsertionPoint = insertionPoint;
-      for (let i = this.customLinks.length - 1; i >= 0; i--) {
+      // Iterate forward (0 to length-1) so items at the beginning of the array (top of list) end up leftmost
+      for (let i = 0; i < this.customLinks.length; i++) {
         const link = this.customLinks[i];
         const linkElement = this.createLinkElement(link, i);
         
-        if (currentInsertionPoint) {
-          // Insert before the insertion point (or previously inserted element)
-          currentInsertionPoint.parentNode.insertBefore(linkElement, currentInsertionPoint);
-          // Update insertion point to the newly inserted element for next iteration
-          currentInsertionPoint = linkElement;
+        if (insertionPoint) {
+          if (i === 0) {
+            // First item: insert before insertionPoint (leftmost position)
+          insertionPoint.parentNode.insertBefore(linkElement, insertionPoint);
+          } else {
+            // Subsequent items: insert after the previous item (to the right)
+            const previousElement = this.elements[i - 1];
+            if (previousElement) {
+              // Insert after the previous element
+              if (previousElement.nextSibling) {
+                previousElement.parentNode.insertBefore(linkElement, previousElement.nextSibling);
+              } else {
+                // No next sibling, append after previous element
+                previousElement.parentNode.appendChild(linkElement);
+              }
+            } else {
+              // Fallback: insert before insertionPoint
+              insertionPoint.parentNode.insertBefore(linkElement, insertionPoint);
+            }
+          }
         } else {
           // No existing header items - insert at the very start
+          if (i === 0) {
+            // First item: insert at start (leftmost)
           if (header.firstChild) {
             header.insertBefore(linkElement, header.firstChild);
           } else {
             header.appendChild(linkElement);
+            }
+          } else {
+            // Subsequent items: insert after the previous item (to the right)
+            const previousElement = this.elements[i - 1];
+            if (previousElement && previousElement.nextSibling) {
+              previousElement.parentNode.insertBefore(linkElement, previousElement.nextSibling);
+            } else if (previousElement) {
+              // Append after previous element
+              previousElement.parentNode.appendChild(linkElement);
+            } else {
+              header.appendChild(linkElement);
+            }
           }
-          // Update insertion point for subsequent iterations
-          currentInsertionPoint = linkElement;
         }
         
         this.elements.push(linkElement);
       }
-      
-      // Reverse this.elements to match the order in customLinks array
-      this.elements.reverse();
       
       console.log(`${this.name}: Rendered ${this.elements.length} custom links`);
     } finally {
@@ -599,22 +726,21 @@ class CustomHeaderLinksEnhancement {
     if (link.type === 'separator') {
       const separatorDiv = document.createElement('div');
       separatorDiv.className = 'c-hdr-item custom-separator';
-      separatorDiv.style.lineHeight = '0';
       
-      const separatorSpan = document.createElement('span');
-      separatorSpan.textContent = '|';
-      // Use iconSize for separator font-size with minimum of 30px
-      const separatorSize = Math.max(this.iconSize || 20, 30);
-      separatorSpan.style.cssText = `
-        color: white;
-        font-size: ${separatorSize}px;
-        font-weight: 100;
-        user-select: none;
-        line-height: 0;
+      // Get separator properties with defaults
+      const borderWidth = link.borderWidth || link.width || 1; // Support both for backward compatibility
+      const color = link.color || '#ffffff'; // default white
+      const height = link.height || 60; // default 60% height
+      const iconPadding = this.headerPadding || 16; // Use header padding setting for icon padding (left and right margins)
+            
+      const lineDiv = document.createElement('div');
+      lineDiv.style.cssText = `
+        width: ${borderWidth}px;
+        height: ${height}%;
+        background-color: ${color};
       `;
-      separatorSpan.style.setProperty('font-size', `${separatorSize}px`, 'important');
-      
-      separatorDiv.appendChild(separatorSpan);
+
+      separatorDiv.appendChild(lineDiv);
       return separatorDiv;
     }
 
@@ -647,6 +773,12 @@ class CustomHeaderLinksEnhancement {
     // Apply icon size if setting exists
     this.applyIconSize(iconElement);
     
+    // Ensure z-index is set (applyIconSize sets it, but ensure it's there even if iconSize isn't set)
+    if (!iconElement.style.zIndex) {
+      iconElement.style.zIndex = '1';
+      iconElement.style.setProperty('z-index', '1', 'important');
+    }
+    
     // Apply icon color if specified
     if (link.iconColor && link.iconColor !== '#ffffff') {
       iconElement.style.color = link.iconColor;
@@ -670,9 +802,16 @@ class CustomHeaderLinksEnhancement {
     if (iconName === 'custom' && link && link.customIcon) {
       let customIconClass = link.customIcon.trim();
       
-      // Convert icon-* to fa-icon-* if needed (CSOD uses fa-icon- prefix)
-      if (customIconClass.startsWith('icon-') && !customIconClass.startsWith('fa-icon-')) {
-        customIconClass = customIconClass.replace('icon-', 'fa-icon-');
+      // Convert old FA3 icon-* or fa-icon-* to FA7 format if needed
+      // Keep FA7 classes (fa-solid, fa-brands, etc.) as-is
+      if (customIconClass.startsWith('icon-') && !customIconClass.startsWith('fa-')) {
+        // Convert icon-* to fa-solid fa-* for FA7
+        const iconName = customIconClass.replace('icon-', '');
+        customIconClass = `fa-solid fa-${iconName}`;
+      } else if (customIconClass.startsWith('fa-icon-') && !customIconClass.includes('fa-solid') && !customIconClass.includes('fa-brands')) {
+        // Convert fa-icon-* to fa-solid fa-* for FA7
+        const iconName = customIconClass.replace('fa-icon-', '');
+        customIconClass = `fa-solid fa-${iconName}`;
       }
       
       return customIconClass;
@@ -724,18 +863,18 @@ class CustomHeaderLinksEnhancement {
     const icon = iconMap[iconName];
     if (!icon) {
       console.warn(`${this.name}: Unknown icon "${iconName}", using default`);
-      // Default to fa3 icon class (CSOD standard)
-      return 'fa-icon-link';
+      // Default to FA7 icon class
+      return 'fa-solid fa-link';
     }
 
-    // Prefer fa3 (fa-icon-*) classes for CSOD compatibility
-    // Only use FontAwesomeUtil if it's available and explicitly set to fa6
-    if (window.FontAwesomeUtil && window.FontAwesomeUtil.version === 'fa6') {
+    // Use FA7/FA6 classes by default (FA7 uses same format as FA6)
+    // Check if FontAwesomeUtil is available and using FA7/FA6
+    if (window.FontAwesomeUtil && (window.FontAwesomeUtil.version === 'fa7' || window.FontAwesomeUtil.version === 'fa6')) {
       return icon.fa6 || icon.fa3;
     }
     
-    // Default to fa3 (fa-icon-*) classes for CSOD
-    return icon.fa3 || icon.none;
+    // Default to FA7/FA6 classes (fa6 property contains FA7-compatible classes)
+    return icon.fa6 || icon.fa3 || icon.none;
   }
 
   /**
@@ -793,6 +932,9 @@ class CustomHeaderLinksEnhancement {
    */
   async cleanup() {
     console.log(`${this.name}: Cleaning up DOM elements (preserving data)...`);
+    
+    // Remove flex CSS when feature is disabled
+    this.removeFlexCSS();
     
     // Disconnect MutationObserver if it exists
     if (this.headerItemsObserver) {
@@ -869,3 +1011,4 @@ window.CustomHeaderLinksEnhancement = CustomHeaderLinksEnhancement;
 
 // Debug: Log when script loads
 console.log('Custom Header Links: Script loaded on URL:', window.location.href);
+

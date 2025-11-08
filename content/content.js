@@ -31,38 +31,41 @@ window.FontAwesomeUtil = {
    * @private
    */
   async _loadFontAwesome() {
-    // Check if CSOD's Font Awesome 3.2.1 is already loaded
-    const fa3Loaded = document.querySelector('link[href*="fontawesome"]') || 
-                      document.querySelector('[class*="fa-icon-"]');
+    // Always load Font Awesome 7 for the extension
+    // FA7 can coexist with CSOD's FA3 because they use different class prefixes
+    // FA7: fa-solid, fa-brands, fa-regular, etc.
+    // FA3: icon-*, fa-icon-*
     
-    if (fa3Loaded) {
-      console.log('Font Awesome Util: Using CSOD\'s Font Awesome 3.2.1');
+    // Check if FA7 is already loaded
+    const fa7Loaded = document.querySelector('link[href*="font-awesome"][href*="7.0.0"]') ||
+                      document.querySelector('link[href*="font-awesome"][href*="7."]');
+    
+    if (fa7Loaded) {
+      console.log('Font Awesome Util: Font Awesome 7 already loaded');
       this.loaded = true;
-      this.version = 'fa3';
-      return 'fa3';
+      this.version = 'fa7';
+      return 'fa7';
     }
 
-    // Fallback: Load Font Awesome 6 if FA3 isn't available
-    console.log('Font Awesome Util: Loading Font Awesome 6 as fallback...');
+    console.log('Font Awesome Util: Loading Font Awesome 7...');
     
     return new Promise((resolve) => {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css';
-      link.integrity = 'sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==';
+      link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css';
       link.crossOrigin = 'anonymous';
       link.referrerPolicy = 'no-referrer';
       
       // Wait for stylesheet to load
       link.onload = () => {
         this.loaded = true;
-        this.version = 'fa6';
-        console.log('Font Awesome Util: Font Awesome 6 loaded successfully');
-        resolve('fa6');
+        this.version = 'fa7';
+        console.log('Font Awesome Util: Font Awesome 7 loaded successfully');
+        resolve('fa7');
       };
       
       link.onerror = () => {
-        console.error('Font Awesome Util: Failed to load Font Awesome 6');
+        console.error('Font Awesome Util: Failed to load Font Awesome 7');
         this.version = 'none';
         resolve('none');
       };
@@ -104,11 +107,13 @@ window.FontAwesomeUtil = {
     const icon = iconMap[iconName];
     if (!icon) {
       console.warn(`Font Awesome Util: Unknown icon name "${iconName}"`);
-      return this.version === 'fa3' ? 'fa-icon-question' : 
-             this.version === 'fa6' ? 'fa-solid fa-question' : '?';
+      return this.version === 'fa7' || this.version === 'fa6' ? 'fa-solid fa-question' : 
+             this.version === 'fa3' ? 'fa-icon-question' : '?';
     }
     
-    return icon[this.version] || icon.none;
+    // FA7 uses same format as FA6, so map fa7 to fa6
+    const versionKey = this.version === 'fa7' ? 'fa6' : this.version;
+    return icon[versionKey] || icon.none;
   }
 };
 
