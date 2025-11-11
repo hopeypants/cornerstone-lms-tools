@@ -40,7 +40,7 @@
     "Opera >= 74"
   ],
   "manifest": {
-    "version": "1.0.5",
+    "version": "1.0.6",
     "manifest_version": 3,
     "name": "Cornerstone LMS Admin Tools",
     "description": "Enhanced tools and utilities for Cornerstone LMS administrators"
