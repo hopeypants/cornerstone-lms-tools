@@ -53,22 +53,24 @@
 
       // Listen for storage changes
       chrome.storage.onChanged.addListener((changes, areaName) => {
-        if (areaName === 'sync') {
-          if (changes.resizeAIIcon) {
-            if (changes.resizeAIIcon.newValue) {
-              chrome.storage.sync.get(['resizeAIIconSize'], (result) => {
-                this.applyIconSize(result.resizeAIIconSize || 32);
-              });
-            } else {
-              this.removeIconSize();
-            }
-          } else if (changes.resizeAIIconSize) {
-            chrome.storage.sync.get(['resizeAIIcon'], (result) => {
-              if (result.resizeAIIcon) {
-                this.applyIconSize(changes.resizeAIIconSize.newValue);
-              }
+        if (areaName !== 'sync' && areaName !== 'local') {
+          return;
+        }
+
+        if (changes.resizeAIIcon) {
+          if (changes.resizeAIIcon.newValue) {
+            chrome.storage.sync.get(['resizeAIIconSize'], (result) => {
+              this.applyIconSize(result.resizeAIIconSize || 32);
             });
+          } else {
+            this.removeIconSize();
           }
+        } else if (changes.resizeAIIconSize) {
+          chrome.storage.sync.get(['resizeAIIcon'], (result) => {
+            if (result.resizeAIIcon) {
+              this.applyIconSize(changes.resizeAIIconSize.newValue);
+            }
+          });
         }
       });
     }

@@ -69,6 +69,166 @@ async function toggleTheme() {
   }
 }
 
+const storageManager = window.StorageManager || null;
+const SYNC_LIMITS_HELP = 'Chrome Sync limits: 100KB total, 8KB per item, and up to 10 writes per minute.';
+
+function formatSyncError(error) {
+  if (!error) {
+    return '';
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  if (error && typeof error.message === 'string') {
+    return error.message;
+  }
+  try {
+    return JSON.stringify(error);
+  } catch (jsonError) {
+    return String(error);
+  }
+}
+
+function updateSyncStatus(state, detail) {
+  const statusContainer = document.getElementById('sync-settings-status');
+  const messageEl = document.getElementById('sync-settings-status-message');
+  const detailEl = document.getElementById('sync-settings-status-detail');
+
+  if (!statusContainer || !messageEl || !detailEl) {
+    return;
+  }
+
+  let message = '';
+  let description = detail || '';
+  let color = 'var(--text-secondary, #6b7280)';
+
+  switch (state) {
+    case 'sync-on':
+      message = 'Settings sync is ON.';
+      if (!description) {
+        description = SYNC_LIMITS_HELP;
+      }
+      break;
+    case 'quota':
+      message = 'Sync quota reached; storing settings locally.';
+      if (!description) {
+        description = 'Reduce stored data or keep sync disabled to stay within Chrome Sync limits.';
+      }
+      color = '#b45309';
+      break;
+    case 'error':
+      message = 'Sync unavailable; storing settings locally.';
+      if (!description) {
+        description = 'Chrome Sync is unavailable in this profile. Settings stay on this device.';
+      }
+      color = '#dc2626';
+      break;
+    case 'sync-off':
+    default:
+      message = 'Settings stay on this device.';
+      if (!description) {
+        description = 'Enable sync to copy settings to your Google account.';
+      }
+      break;
+  }
+
+  statusContainer.dataset.state = state;
+  statusContainer.style.color = color;
+  messageEl.textContent = message;
+  if (description) {
+    detailEl.textContent = description;
+    detailEl.style.display = 'block';
+  } else {
+    detailEl.textContent = '';
+    detailEl.style.display = 'none';
+  }
+}
+
+async function setupSyncSettingsToggle() {
+  const toggle = document.getElementById('sync-settings-toggle');
+
+  if (!toggle) {
+    return;
+  }
+
+  if (!storageManager) {
+    toggle.disabled = true;
+    updateSyncStatus('error', 'Storage manager unavailable. Settings stay on this device.');
+    return;
+  }
+
+  try {
+    const preferred = await storageManager.isSyncPreferred();
+    const available = await storageManager.isSyncAvailable();
+    const active = preferred && available;
+    toggle.checked = active;
+    if (active) {
+      updateSyncStatus('sync-on');
+    } else if (preferred && !available) {
+      const error = storageManager.getLastSyncError();
+      updateSyncStatus('error', formatSyncError(error) || undefined);
+    } else {
+      updateSyncStatus('sync-off');
+    }
+  } catch (error) {
+    console.error('Failed to load sync preference:', error);
+    toggle.checked = false;
+    updateSyncStatus('error', formatSyncError(error));
+  }
+
+  toggle.addEventListener('change', async (event) => {
+    const enableSync = event.target.checked;
+    toggle.disabled = true;
+
+    try {
+      await storageManager.setSyncEnabled(enableSync, { migrate: true });
+      const availableAfter = await storageManager.isSyncAvailable();
+      const active = enableSync && availableAfter;
+      toggle.checked = active;
+      if (active) {
+        updateSyncStatus('sync-on');
+      } else if (enableSync && !availableAfter) {
+        updateSyncStatus('error', 'Chrome Sync is not available right now; settings remain local.');
+      } else {
+        updateSyncStatus('sync-off');
+      }
+    } catch (error) {
+      console.error('Failed to toggle sync storage:', error);
+      toggle.checked = false;
+      const formatted = formatSyncError(error);
+      if (error?.code === 'SYNC_ITEM_QUOTA' || error?.code === 'SYNC_TOTAL_QUOTA' || error?.code === 'SYNC_WRITE_LIMIT') {
+        updateSyncStatus('quota', formatted || SYNC_LIMITS_HELP);
+      } else {
+        updateSyncStatus('error', formatted || undefined);
+      }
+    } finally {
+      toggle.disabled = false;
+    }
+  });
+
+  storageManager.subscribe((event) => {
+    if (!event) {
+      return;
+    }
+
+    const formatted = formatSyncError(event.error);
+    switch (event.type) {
+      case 'sync-unavailable':
+      case 'sync-error':
+      case 'migration-failed':
+        toggle.checked = false;
+        updateSyncStatus('error', formatted || undefined);
+        break;
+      case 'quota-exceeded':
+        toggle.checked = false;
+        updateSyncStatus('quota', formatted || SYNC_LIMITS_HELP);
+        break;
+      default:
+        break;
+    }
+  });
+}
+
 // Version update notification
 const GITHUB_REPO = 'hopeypants/cornerstone-lms-tools';
 
@@ -378,6 +538,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   checkAIIconAvailability();
   checkPinnedLinksIconAvailability();
   setupSettingsExportImport();
+  await setupSyncSettingsToggle();
   setupSettingsManagement();
   // LOID check will be done in loadSelectedTab if Catalog tab is active
 });

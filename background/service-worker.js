@@ -3,6 +3,8 @@
  * Handles extension lifecycle, message coordination, and background tasks
  */
 
+importScripts('../shared/storage-manager.js');
+
 /**
  * Initialize default settings on installation
  */

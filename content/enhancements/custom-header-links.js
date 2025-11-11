@@ -25,7 +25,9 @@ class CustomHeaderLinksEnhancement {
     const style = document.createElement('style');
     style.id = styleId;
     style.textContent = `
-      .c-hdr-item :first-child:not(.custom-separator :first-child) {
+      .c-hdr-item > a:first-of-type,
+      .c-hdr-item > .quickLinksTooltip-icon,
+      .c-hdr-item > .csxGalaxyAIAnnouncement-icon {
         display: flex;
         justify-content: center;
       }
@@ -334,6 +336,14 @@ class CustomHeaderLinksEnhancement {
    */
   setupStorageListeners() {
     chrome.storage.onChanged.addListener((changes, areaName) => {
+      if (areaName !== 'sync' && areaName !== 'local') {
+        return;
+      }
+
+      if (changes.customHeaderLinks) {
+        this.loadCustomLinks(true);
+      }
+      
       if (areaName === 'sync') {
         // Handle icon size changes
         if (changes.customLinkIconSize) {

@@ -123,18 +123,12 @@
    * Handle storage changes
    */
   chrome.storage.onChanged.addListener((changes, areaName) => {
-    if (areaName === 'sync') {
-      if (changes.resizeCustomPagesContainer) {
-        isEnabled = changes.resizeCustomPagesContainer.newValue || false;
-        applyWidth();
-      }
+    if (areaName !== 'sync' && areaName !== 'local') {
+      return;
+    }
 
-      if (changes.customPagesContainerWidth) {
-        containerWidth = changes.customPagesContainerWidth.newValue || 55;
-        if (isEnabled) {
-          applyWidth();
-        }
-      }
+    if (changes.resizeCustomPagesContainer || changes.customPagesContainerWidth) {
+      applyWidth();
     }
   });
 

@@ -653,68 +653,70 @@ function applyHeaderPadding(padding) {
 try {
   if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
     chrome.storage.onChanged.addListener(async (changes, areaName) => {
-      if (areaName === 'sync') {
-        for (const [feature, change] of Object.entries(changes)) {
-          // Skip LO link features - they handle their own storage changes via lo-links.js
-          if (feature.startsWith('loShow') || feature === 'loCopyLoid') {
-            // lo-links.js will handle this storage change directly
-            continue;
+      if (areaName !== 'sync' && areaName !== 'local') {
+        return;
+      }
+
+      for (const [feature, change] of Object.entries(changes)) {
+        // Skip LO link features - they handle their own storage changes via lo-links.js
+        if (feature.startsWith('loShow') || feature === 'loCopyLoid') {
+          // lo-links.js will handle this storage change directly
+          continue;
+        }
+
+        // Skip transcript features - they handle their own storage changes via highlight-transcript-statuses.js
+        if (feature === 'highlightTranscriptStatuses' || feature.startsWith('transcript')) {
+          // highlight-transcript-statuses.js will handle this storage change directly
+          continue;
+        }
+
+        // Skip assignment status features - they handle their own storage changes via highlight-assignment-statuses.js
+        if (feature === 'highlightAssignmentStatuses' || feature === 'assignmentSettingsChanged' || feature.startsWith('assignment')) {
+          // highlight-assignment-statuses.js will handle this storage change directly
+          continue;
+        }
+
+        // Skip custom pages container features - they handle their own storage changes via resize-custom-pages-container.js
+        if (feature === 'resizeCustomPagesContainer' || feature === 'customPagesContainerWidth') {
+          // resize-custom-pages-container.js will handle this storage change directly
+          continue;
+        }
+
+        if (feature === 'highlightEnvironments' || feature.startsWith('environment')) {
+          // highlight-environments.js will handle this storage change directly
+          continue;
+        }
+
+        // Skip proxy default text value - it's handled by proxy-as-user.js
+        if (feature === 'proxyDefaultTextValue') {
+          // proxy-as-user.js will handle this storage change directly
+          continue;
+        }
+
+        // Skip icon size settings - they're handled by specific message types
+        if (feature === 'resizeAIIconSize' || feature === 'resizePinnedLinksIconSize' || feature === 'customLinkIconSize') {
+          // These are handled by specific APPLY_*_ICON_SIZE messages
+          continue;
+        }
+
+        // Special handling for customHeaderLinksEnabled
+        if (feature === 'customHeaderLinksEnabled') {
+          const enabled = change.newValue;
+          const EnhancementClass = ENHANCEMENTS.customHeaderLinks;
+
+          if (enabled) {
+            await enableEnhancement('customHeaderLinks', EnhancementClass);
+          } else {
+            await disableEnhancement('customHeaderLinks');
           }
-          
-          // Skip transcript features - they handle their own storage changes via highlight-transcript-statuses.js
-          if (feature === 'highlightTranscriptStatuses' || feature.startsWith('transcript')) {
-            // highlight-transcript-statuses.js will handle this storage change directly
-            continue;
-          }
-          
-          // Skip assignment status features - they handle their own storage changes via highlight-assignment-statuses.js
-          if (feature === 'highlightAssignmentStatuses' || feature === 'assignmentSettingsChanged' || feature.startsWith('assignment')) {
-            // highlight-assignment-statuses.js will handle this storage change directly
-            continue;
-          }
-          
-          // Skip custom pages container features - they handle their own storage changes via resize-custom-pages-container.js
-          if (feature === 'resizeCustomPagesContainer' || feature === 'customPagesContainerWidth') {
-            // resize-custom-pages-container.js will handle this storage change directly
-            continue;
-          }
-          
-          if (feature === 'highlightEnvironments' || feature.startsWith('environment')) {
-            // highlight-environments.js will handle this storage change directly
-            continue;
-          }
-          
-          // Skip proxy default text value - it's handled by proxy-as-user.js
-          if (feature === 'proxyDefaultTextValue') {
-            // proxy-as-user.js will handle this storage change directly
-            continue;
-          }
-          
-          // Skip icon size settings - they're handled by specific message types
-          if (feature === 'resizeAIIconSize' || feature === 'resizePinnedLinksIconSize' || feature === 'customLinkIconSize') {
-            // These are handled by specific APPLY_*_ICON_SIZE messages
-            continue;
-          }
-          
-          // Special handling for customHeaderLinksEnabled
-          if (feature === 'customHeaderLinksEnabled') {
-            const enabled = change.newValue;
-            const EnhancementClass = ENHANCEMENTS.customHeaderLinks;
-            
-            if (enabled) {
-              await enableEnhancement('customHeaderLinks', EnhancementClass);
-            } else {
-              await disableEnhancement('customHeaderLinks');
-            }
-          } else if (ENHANCEMENTS[feature]) {
-            const enabled = change.newValue;
-            const EnhancementClass = ENHANCEMENTS[feature];
-            
-            if (enabled) {
-              await enableEnhancement(feature, EnhancementClass);
-            } else {
-              await disableEnhancement(feature);
-            }
+        } else if (ENHANCEMENTS[feature]) {
+          const enabled = change.newValue;
+          const EnhancementClass = ENHANCEMENTS[feature];
+
+          if (enabled) {
+            await enableEnhancement(feature, EnhancementClass);
+          } else {
+            await disableEnhancement(feature);
           }
         }
       }

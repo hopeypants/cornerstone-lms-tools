@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Cornerstone LMS Admin Tools",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "Enhanced tools and utilities for Cornerstone LMS administrators",
   "permissions": [
     "storage",
@@ -27,6 +27,7 @@
     {
       "matches": ["https://*.csod.com/*"],
       "js": [
+        "shared/storage-manager.js",
         "content/enhancements/header-logout-link.js",
         "content/enhancements/custom-header-links.js",
         "content/enhancements/resize-ai-icon.js",
@@ -48,6 +49,7 @@
     {
       "matches": ["https://*.csod.com/*event_sessions_list_main*"],
       "js": [
+        "shared/storage-manager.js",
         "content/enhancements/highlight-zero-enrollments.js",
         "content/enhancements/highlight-full-sessions.js",
         "content/enhancements/center-enrollment-column.js",
@@ -63,6 +65,7 @@
         "https://*.csod.com/LMS/ILT/main*"
       ],
       "js": [
+        "shared/storage-manager.js",
         "content/enhancements/toggle-tentative-column.js",
         "content/enhancements/highlight-zero-sessions.js",
         "content/enhancements/center-number-columns.js",
@@ -76,6 +79,7 @@
     {
       "matches": ["https://*.csod.com/*admin/Users*"],
       "js": [
+        "shared/storage-manager.js",
         "content/enhancements/user-status-dropdown-defaults.js",
         "content/enhancements/user-ou-type-dropdown-defaults.js",
         "content/enhancements/user-country-dropdown-defaults.js",

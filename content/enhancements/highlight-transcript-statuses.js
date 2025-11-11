@@ -275,8 +275,11 @@
    * Handle storage changes
    */
   chrome.storage.onChanged.addListener((changes, areaName) => {
-    // Only handle storage changes on transcript pages
-    if (!window.location.href.includes('UniversalProfile/Transcript')) {
+    if (areaName !== 'sync' && areaName !== 'local') {
+      return;
+    }
+ 
+    if (!changes.highlightTranscriptStatuses) {
       return;
     }
     

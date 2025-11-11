@@ -53,22 +53,16 @@
 
       // Listen for storage changes
       chrome.storage.onChanged.addListener((changes, areaName) => {
-        if (areaName === 'sync') {
-          if (changes.resizePinnedLinksIcon) {
-            if (changes.resizePinnedLinksIcon.newValue) {
-              chrome.storage.sync.get(['resizePinnedLinksIconSize'], (result) => {
-                this.applyIconSize(result.resizePinnedLinksIconSize || 22);
-              });
-            } else {
-              this.removeIconSize();
+        if (areaName !== 'sync' && areaName !== 'local') {
+          return;
+        }
+
+        if (changes.resizePinnedLinksIconSize) {
+          chrome.storage.sync.get(['resizePinnedLinksIcon'], (result) => {
+            if (result.resizePinnedLinksIcon) {
+              this.applyIconSize(changes.resizePinnedLinksIconSize.newValue);
             }
-          } else if (changes.resizePinnedLinksIconSize) {
-            chrome.storage.sync.get(['resizePinnedLinksIcon'], (result) => {
-              if (result.resizePinnedLinksIcon) {
-                this.applyIconSize(changes.resizePinnedLinksIconSize.newValue);
-              }
-            });
-          }
+          });
         }
       });
     }

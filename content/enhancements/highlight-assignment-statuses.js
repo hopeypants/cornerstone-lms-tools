@@ -223,28 +223,17 @@
       return;
     }
     
-    if (areaName === 'sync') {
-      const assignmentKeys = [
-        'highlightAssignmentStatuses',
-        'assignmentActiveEnabled', 'assignmentActiveColor', 'assignmentActiveOpacity',
-        'assignmentQueuedEnabled', 'assignmentQueuedColor', 'assignmentQueuedOpacity',
-        'assignmentProcessedEnabled', 'assignmentProcessedColor', 'assignmentProcessedOpacity',
-        'assignmentCancelledEnabled', 'assignmentCancelledColor', 'assignmentCancelledOpacity',
-        'assignmentInactiveEnabled', 'assignmentInactiveColor', 'assignmentInactiveOpacity',
-        'assignmentDraftsEnabled', 'assignmentDraftsColor', 'assignmentDraftsOpacity'
-      ];
+    if (areaName !== 'sync' && areaName !== 'local') {
+      return;
+    }
 
-      let shouldReload = false;
-      for (const key of assignmentKeys) {
-        if (changes[key]) {
-          shouldReload = true;
-          break;
-        }
-      }
-
-      if (shouldReload) {
-        init();
-      }
+    if (changes.assignmentSettingsChanged || changes.assignmentActiveEnabled || changes.assignmentActiveColor || changes.assignmentActiveOpacity ||
+        changes.assignmentQueuedEnabled || changes.assignmentQueuedColor || changes.assignmentQueuedOpacity ||
+        changes.assignmentProcessedEnabled || changes.assignmentProcessedColor || changes.assignmentProcessedOpacity ||
+        changes.assignmentCancelledEnabled || changes.assignmentCancelledColor || changes.assignmentCancelledOpacity ||
+        changes.assignmentInactiveEnabled || changes.assignmentInactiveColor || changes.assignmentInactiveOpacity ||
+        changes.assignmentDraftsEnabled || changes.assignmentDraftsColor || changes.assignmentDraftsOpacity) {
+      init();
     }
   });
 

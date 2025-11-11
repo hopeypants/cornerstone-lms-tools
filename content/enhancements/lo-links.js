@@ -676,23 +676,25 @@
 
   // Listen for storage changes (settings changed in another tab or on initialization)
   chrome.storage.onChanged.addListener((changes, areaName) => {
-    if (areaName === 'sync') {
-      // Only process if on a valid page
-      if (!isValidPage()) {
-        return;
-      }
-      
-      // Check if any LO link settings changed
-      const loFeatures = ['loShowPreviewLink', 'loShowDetailsLink', 'loShowLaunchLink', 'loShowRegisterLink', 'loCopyLoid'];
-      
-      for (const feature of loFeatures) {
-        if (changes[feature]) {
-          if (feature === 'loCopyLoid') {
-            setupLoidCopy();
-          } else {
-            updateLinkVisibility();
-            break; // Only need to call once for link visibility
-          }
+    if (areaName !== 'sync' && areaName !== 'local') {
+      return;
+    }
+
+    const relevantKeys = [
+      'loShowPreviewLink',
+      'loShowDetailsLink',
+      'loShowLaunchLink',
+      'loShowRegisterLink',
+      'loCopyLoid'
+    ];
+
+    for (const key of relevantKeys) {
+      if (changes[key]) {
+        if (key === 'loCopyLoid') {
+          setupLoidCopy();
+        } else {
+          updateLinkVisibility();
+          break; // Only need to call once for link visibility
         }
       }
     }

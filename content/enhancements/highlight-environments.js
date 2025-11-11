@@ -524,7 +524,11 @@
    * Handle storage changes
    */
   chrome.storage.onChanged.addListener((changes, areaName) => {
-    if (areaName === 'sync') {
+    if (areaName !== 'sync' && areaName !== 'local') {
+      return;
+    }
+
+    if (changes.environmentProductionEnabled || changes.environmentProductionHeaderColorEnabled || changes.environmentProductionColor || changes.environmentProductionHeaderOpacity || changes.environmentProductionWatermark || changes.environmentProductionWatermarkColor || changes.environmentProductionWatermarkOpacity || changes.environmentProductionExpanded) {
       let shouldUpdate = false;
 
       if (changes.highlightEnvironments) {
